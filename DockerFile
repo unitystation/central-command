@@ -1,8 +1,21 @@
 FROM python:3
-ENV PYTHONUNBUFFERED=1
-RUN mkdir /code
-WORKDIR /code
-COPY requirements.txt /code/
-RUN pip install -r requirements.txt
-COPY . /code/
+
+#handle envirs
+ENV   PYTHONFAULTHANDLER=1 \
+  PYTHONUNBUFFERED=1 \
+  PYTHONHASHSEED=random \
+  PIP_NO_CACHE_DIR=off \
+  PIP_DISABLE_PIP_VERSION_CHECK=on \
+  PIP_DEFAULT_TIMEOUT=100
+
+# copy django project
+RUN mkdir /djangoapp
+COPY ./unitystation_auth /djangoapp
+
+WORKDIR /djangoapp
+
+#install dependencies
+RUN pip insall poetry
+RUN poetry install
+
 
