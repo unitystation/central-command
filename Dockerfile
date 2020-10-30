@@ -9,13 +9,14 @@ ENV   PYTHONFAULTHANDLER=1 \
   PIP_DEFAULT_TIMEOUT=100
 
 # copy django project
-RUN mkdir /djangoapp
-COPY ./unitystation_auth /djangoapp
-
 WORKDIR /djangoapp
+COPY ./unitystation_auth .
 
 #install dependencies
-RUN pip insall poetry
-RUN poetry install
+COPY poetry.lock .
+COPY pyproject.toml .
+RUN pip install poetry
+RUN poetry config virtualenvs.create false \
+  && poetry install
 
 

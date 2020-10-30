@@ -6,12 +6,12 @@ services:
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=123
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python unitystation_auth/manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/code
+      - .:/djangoapp
     ports:
       - "8000:8000"
     depends_on:
