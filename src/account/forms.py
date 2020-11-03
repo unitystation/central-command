@@ -1,5 +1,4 @@
-from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm, UsernameField
 from .models import Account
 
 
@@ -7,11 +6,11 @@ class AccountCreationForm(UserCreationForm):
 
     class Meta:
         model = Account
-        fields = ('username', 'email')
+        fields = ('email', 'username')
 
 
 class AccountChangeForm(UserChangeForm):
 
     class Meta:
         model = Account
-        fields = ('username', 'email')
+        fields = ('email', 'username')
