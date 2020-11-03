@@ -3,18 +3,26 @@ version: '3'
 services:
   db:
     image: postgres
-    env_file:
-      - ./.envs/.postgres
+    environment:
+      POSTGRES_HOST: $POSTGRES_HOST
+      POSTGRES_PORT: $POSTGRES_PORT
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
     volumes:
     - ./DB:/var/lib/postgresql/data
   web:
-    build: .
-    command: python manage.py runserver 0.0.0.0:8000
-    env_file:
-      - ./.envs/.postgres
-      - ./.envs/.email
-    volumes:
-      - ./src:/src
+    image: unitystation/unitystation_auth
+    environment:
+      POSTGRES_HOST: $POSTGRES_HOST
+      POSTGRES_PORT: $POSTGRES_PORT
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      EMAIL_HOST: $EMAIL_HOST
+      EMAIL_PORT: $EMAIL_PORT
+      EMAIL_HOST_USER: $EMAIL_HOST_USER
+      EMAIL_HOST_PASSWORD: $EMAIL_HOST_PASSWORD
     ports:
       - "8000:8000"
     depends_on:

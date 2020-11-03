@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_email_verification',
     'account',
     'website',
     'persistence'
@@ -90,6 +91,26 @@ DATABASES = {
     }
 }
 
+
+# Email settings
+EMAIL_USE_TLS = True
+EMAIL_HOST = os.environ['EMAIL_HOST']
+EMAIL_PORT = int(os.environ['EMAIL_PORT'])
+EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+REQUIRE_EMAIL_CONFIRMATION = True
+
+# Email confirmation settings
+EMAIL_ACTIVE_FIELD = 'is_active'
+EMAIL_SERVER = os.environ['EMAIL_HOST']
+EMAIL_ADDRESS = os.environ['EMAIL_HOST_USER']
+EMAIL_FROM_ADDRESS = os.environ['EMAIL_HOST_USER']
+EMAIL_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+EMAIL_MAIL_SUBJECT = 'Confirm your email'
+EMAIL_MAIL_HTML = 'registration/mail_body.html'
+EMAIL_PAGE_TEMPLATE = 'registration/confirm_template.html'
+EMAIL_PAGE_DOMAIN = os.environ['EMAIL_PAGE_DOMAIN']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

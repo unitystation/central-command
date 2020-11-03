@@ -24,7 +24,7 @@ class AccountAdmin(UserAdmin):
 
     list_display = ['user_id', 'email', 'username', 'is_staff', 'is_active']
     readonly_fields = ['user_id']
-    list_editable = ['email', 'username', 'is_active']
+    list_editable = ['email', 'username']
 
 
 admin.site.unregister(Group)

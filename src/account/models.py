@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from .utils import PushID
+from django_email_verification import sendConfirm
 
 
 class Account(AbstractUser):

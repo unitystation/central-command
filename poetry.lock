@@ -48,6 +48,14 @@ argon2 = ["argon2-cffi (>=16.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-email-verification"
+version = "0.0.7"
+description = "Email confirmation app for django"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "djangorestframework"
 version = "3.12.1"
 description = "Web APIs for Django, made easy."
@@ -161,7 +169,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "609fef9d1231b7e30e36c146b248687ca9c6b20e66fbd8c962a35c12a33bcc85"
+content-hash = "f1b18510378a10922a67f25bf3ce34e76302851ceab7570eed9ec9bb23f60a52"
 
 [metadata.files]
 asgiref = [
@@ -179,6 +187,10 @@ colorama = [
 django = [
     {file = "Django-3.1.2-py3-none-any.whl", hash = "sha256:c93c28ccf1d094cbd00d860e83128a39e45d2c571d3b54361713aaaf9a94cac4"},
     {file = "Django-3.1.2.tar.gz", hash = "sha256:a2127ad0150ec6966655bedf15dbbff9697cc86d61653db2da1afa506c0b04cc"},
+]
+django-email-verification = [
+    {file = "django-email-verification-0.0.7.tar.gz", hash = "sha256:02ed6b47c1311a18475f11eb7d002381d13b1fba73b0ce30c3435cc887f86a3b"},
+    {file = "django_email_verification-0.0.7-py3-none-any.whl", hash = "sha256:43e137f4651413620dddc3b8935e06c458ce0ffd1aeafdc0678a187b13118761"},
 ]
 djangorestframework = [
     {file = "djangorestframework-3.12.1-py3-none-any.whl", hash = "sha256:5c5071fcbad6dce16f566d492015c829ddb0df42965d488b878594aabc3aed21"},
