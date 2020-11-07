@@ -13,3 +13,19 @@ services:
     - ./DB:/var/lib/postgresql/data
     ports:
     - "5432:5432"
+#  web:
+#    build: .
+#    environment:
+#      POSTGRES_HOST: $POSTGRES_HOST
+#      POSTGRES_PORT: $POSTGRES_PORT
+#      POSTGRES_DB: $POSTGRES_DB
+#      POSTGRES_USER: $POSTGRES_USER
+#      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+#      EMAIL_HOST: $EMAIL_HOST
+#      EMAIL_PORT: $EMAIL_PORT
+#      EMAIL_HOST_USER: $EMAIL_HOST_USER
+#      EMAIL_HOST_PASSWORD: $EMAIL_HOST_PASSWORD
+#    ports:
+#      - "8000:8000"
+#    depends_on:
+#      - db
