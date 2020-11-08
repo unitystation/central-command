@@ -4,9 +4,6 @@ from .utils import generate_isb
 
 
 class PolyPhrase(models.Model):
-    phrase_id = models.AutoField(
-        primary_key=True
-    )
     said_by = models.ForeignKey(
         Account,
         verbose_name='said by',
@@ -20,7 +17,7 @@ class PolyPhrase(models.Model):
     )
 
     def __str__(self):
-        return
+        return f"phrase number {self.id}"
 
 
 class BookCategory(models.Model):
