@@ -1,0 +1,17 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  #TODO add test job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Publish to Registry
+      uses: elgohr/Publish-Docker-Github-Action@2.12
+      with:
+        name: unitystation/unitystation_auth
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
