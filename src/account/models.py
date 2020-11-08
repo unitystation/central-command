@@ -1,12 +1,12 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+
 from .utils import PushID
-from django_email_verification import sendConfirm
 
 
 class Account(AbstractUser):
     email = models.EmailField(verbose_name='email address', unique=True)
-    username = models.CharField(verbose_name='account name', max_length=50, unique=False, blank=True)
+    username = models.CharField(verbose_name='account name', max_length=50, unique=False, blank=False)
     user_id = models.CharField(verbose_name='user id', max_length=28, blank=True)
 
     USERNAME_FIELD = 'email'
