@@ -4,6 +4,6 @@ from persistence.api.views import poly_phrase_by_id_view, poly_random_phrase_vie
 app_name = 'persistence'
 
 urlpatterns = [
-    path('/', poly_random_phrase_view, name='Poly says'),
-    path('/<phrase_id>/', poly_phrase_by_id_view, name='Phrase by id')
+    path('', poly_random_phrase_view, name='Poly says'),
+    path('<phrase_id>/', poly_phrase_by_id_view, name='Phrase by id')
 ]
