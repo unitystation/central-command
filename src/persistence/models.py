@@ -1,6 +1,6 @@
 from django.db import models
 from account.models import Account
-from .utils import generate_isb
+from .utils import generate_isbn
 
 
 class PolyPhrase(models.Model):
@@ -65,7 +65,7 @@ class Book(models.Model):
         return self.bookpage_set.all().order_by('page_id')
 
     def save(self, *args, **kwargs):
-        self.isbn = generate_isb()
+        self.isbn = generate_isbn()
         super().save(*args, **kwargs)
 
 
