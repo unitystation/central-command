@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/timothycrosley/isort
+    rev: 5.6.4
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/ambv/black
+    rev: 20.8b1
+    hooks:
+      - id: black
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.3.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.4
+    hooks:
+      - id: flake8
+        additional_dependencies: ["flake8-bugbear", "flake8-django"]
+        # pre-commit passes individual files to linters, flake8-django finds errors in
+        # migrations folder in this case despite configuration. Until someone finds a
+        # fix this should be duplicated here and .flake8 config.
+        exclude: migrations
+  #
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v0.782
+  #   hooks:
+  #     - id: mypy

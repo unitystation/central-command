@@ -1,13 +1,12 @@
-import random
 import time
+import random
+
 import numpy
 
 
-class PushID(object):
+class PushID:
     # Modeled after base64 web-safe chars, but ordered by ASCII.
-    PUSH_CHARS = ('-0123456789'
-                  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-                  '_abcdefghijklmnopqrstuvwxyz')
+    PUSH_CHARS = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"
 
     def __init__(self):
 
@@ -24,7 +23,7 @@ class PushID(object):
 
     def next_id(self):
         now = int(time.time() * 1000)
-        duplicateTime = (now == self.lastPushTime)
+        duplicateTime = now == self.lastPushTime
         self.lastPushTime = now
         timeStampChars = numpy.empty(8, dtype=str)
 
@@ -33,9 +32,9 @@ class PushID(object):
             now = int(now / 64)
 
         if now != 0:
-            raise ValueError('We should have converted the entire timestamp.')
+            raise ValueError("We should have converted the entire timestamp.")
 
-        uid = ''.join(timeStampChars)
+        uid = "".join(timeStampChars)
 
         if not duplicateTime:
             for i in range(12):
@@ -54,5 +53,5 @@ class PushID(object):
             uid += self.PUSH_CHARS[self.lastRandChars[i]]
 
         if len(uid) != 20:
-            raise ValueError('Length should be 20.')
+            raise ValueError("Length should be 20.")
         return uid
