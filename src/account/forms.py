@@ -1,14 +1,14 @@
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import Account
+from django.conf import settings
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django_email_verification import sendConfirm
-from django.conf import  settings
+
+from .models import Account
 
 
 class AccountCreationForm(UserCreationForm):
-
     class Meta:
         model = Account
-        fields = ('email', 'username')
+        fields = ("email", "username")
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -22,7 +22,6 @@ class AccountCreationForm(UserCreationForm):
 
 
 class AccountChangeForm(UserChangeForm):
-
     class Meta:
         model = Account
-        fields = ('email', 'username')
+        fields = ("email", "username")

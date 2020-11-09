@@ -1,18 +1,44 @@
 name: CI
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
-  #TODO add test job
-  build:
+  release:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Publish to Registry
-      uses: elgohr/Publish-Docker-Github-Action@2.12
-      with:
-        name: unitystation/unitystation_auth
-        tags: "latest"  
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: node setup
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: plugins
+        run: npm install @semantic-release/changelog -D @semantic-release/git -D
+      - name: generate release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: always()
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Get Latest Tag
+        id: lasttag
+        uses: WyriHaximus/github-action-get-previous-tag@1.0.0
+      - name: Build and push to docker hub
+        uses: elgohr/Publish-Docker-Github-Action@2.12
+        with:
+          name: unitystation/unitystation_auth
+          tags: "latest,${{ steps.lasttag.outputs.tag }}"
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
