@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   db:
@@ -10,7 +10,8 @@ services:
       POSTGRES_USER: $POSTGRES_USER
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
     volumes:
-    - ./DB:/var/lib/postgresql/data
+      - ./DB:/var/lib/postgresql/data
+
   web:
     image: unitystation/unitystation_auth
     environment:
@@ -23,6 +24,7 @@ services:
       EMAIL_PORT: $EMAIL_PORT
       EMAIL_HOST_USER: $EMAIL_HOST_USER
       EMAIL_HOST_PASSWORD: $EMAIL_HOST_PASSWORD
+      EMAIL_PAGE_DOMAIN: $EMAIL_PAGE_DOMAIN
     ports:
       - "8000:8000"
     depends_on:

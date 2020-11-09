@@ -1,6 +1,4 @@
-.envs
-.venv
+**/__pycache__
+
+# it is not included, but docker-compose tries to walk into it and errors
 DB
-.gitignore
-docker-compose.yml
-Dockerfile
