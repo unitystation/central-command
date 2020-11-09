@@ -13,6 +13,6 @@ jobs:
       uses: elgohr/Publish-Docker-Github-Action@2.12
       with:
         name: unitystation/unitystation_auth
-        tag: latest  
+        tags: "latest"  
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
