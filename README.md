@@ -1,5 +1,7 @@
 # unitystation_auth
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/83ff59655dfa42509cc61cd9c007162a)](https://app.codacy.com/gh/unitystation/unitystation_auth?utm_source=github.com&utm_medium=referral&utm_content=unitystation/unitystation_auth&utm_campaign=Badge_Grade_Settings)
+
 ### Development guide
 #### Setting up Docker
 TODO
