@@ -1,7 +1,9 @@
 import django.contrib.auth.password_validation as validators
 
+from django.conf import settings
 from django.core import exceptions
 from rest_framework import serializers
+from django_email_verification import sendConfirm
 
 from account.models import Account
 
@@ -22,7 +24,11 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
 
         password = self.validated_data["password"]
         account.set_password(password)
-        account.save()
+
+        if settings.REQUIRE_EMAIL_CONFIRMATION:
+            sendConfirm(account)
+        else:
+            account.save()
 
         return account
 
