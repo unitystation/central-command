@@ -10,7 +10,6 @@ class PolyPhrase(models.Model):
         Account,
         verbose_name="said by",
         on_delete=models.DO_NOTHING,
-        blank=True,
         null=True,
     )
     phrase = models.CharField(verbose_name="phrase", max_length=150)
@@ -21,11 +20,9 @@ class PolyPhrase(models.Model):
 
 class BookCategory(models.Model):
     cat_id = models.AutoField(primary_key=True)
-    name = models.CharField(verbose_name="category name", max_length=50, null=False)
-    abbrev = models.CharField(verbose_name="abbreviation", max_length=3, null=False)
-    description = models.CharField(  # NOQA
-        verbose_name="description", max_length=150, blank=True, null=True
-    )
+    name = models.CharField(verbose_name="category name", max_length=50)
+    abbrev = models.CharField(verbose_name="abbreviation", max_length=3)
+    description = models.CharField(verbose_name="description", max_length=150)
 
     def __str__(self):
         return self.name
@@ -33,7 +30,7 @@ class BookCategory(models.Model):
 
 class Book(models.Model):
     isbn = models.CharField(verbose_name="isbn", max_length=13, unique=True)
-    title = models.CharField(verbose_name="title", max_length=30, null=False)
+    title = models.CharField(verbose_name="title", max_length=30, blank=False)
     categories = models.ManyToManyField(BookCategory)
 
     def __str__(self):
@@ -49,10 +46,8 @@ class Book(models.Model):
 
 class BookPage(models.Model):
     page_id = models.AutoField(primary_key=True)
-    content = models.TextField(  # NOQA
-        verbose_name="page content", max_length=600, null=True
-    )
-    book = models.ForeignKey(Book, models.CASCADE, blank=False, null=False)
+    content = models.TextField(verbose_name="page content", max_length=600, blank=True)
+    book = models.ForeignKey(Book, models.CASCADE, null=False)
 
     def __str__(self):
         return f"{self.page_id} page. from {self.book.title}"
