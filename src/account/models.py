@@ -9,8 +9,8 @@ class Account(AbstractUser):
     username = models.CharField(
         verbose_name="account name", max_length=50, unique=False, blank=False
     )
-    user_id = models.CharField(verbose_name="user id", max_length=28, blank=True)
-    character_settings = models.JSONField()
+    user_id = models.CharField(verbose_name="user id", max_length=28, primary_key=True)
+    character_settings = models.JSONField(null=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
