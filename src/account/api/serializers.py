@@ -51,3 +51,9 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return super(RegisterAccountSerializer, self).validate(data)
+
+
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ["email", "username", "user_id"]
