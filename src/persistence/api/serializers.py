@@ -6,4 +6,4 @@ from persistence.models import PolyPhrase
 class PolyPhrasesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PolyPhrase
-        fields = ("phrase_id", "said_by", "phrase")
+        fields = ("id", "said_by", "phrase")
