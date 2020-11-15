@@ -1,6 +1,6 @@
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 
 from persistence.models import PolyPhrase
 from persistence.api.serializers import PolyPhrasesSerializer
@@ -18,6 +18,7 @@ def poly_phrase_by_id_view(request, phrase_id):
 
 
 @api_view(["GET"])
+@permission_classes([permissions.AllowAny])
 def poly_random_phrase_view(request):
     try:
         phrase = PolyPhrase.objects.order_by("?").first()
