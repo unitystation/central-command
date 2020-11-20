@@ -1,0 +1,24 @@
+name: Push
+on:
+  push:
+    branches: [main, develop]
+    tags: ["*"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # if tag is present, set OPTIONAL_TAG_NAME to ",TAG_NAME" (comma is important)
+      - name: Get Latest Tag
+        if: contains(github.ref, 'refs/tags/')
+        run: |
+          echo "OPTIONAL_TAG_NAME=,${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Build and push Docker image
+        uses: elgohr/Publish-Docker-Github-Action@3.01
+        with:
+          name: unitystation/unitystation_auth
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          cache: true
+          tags: "latest${{ env.OPTIONAL_TAG_NAME }}"
