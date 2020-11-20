@@ -1,0 +1,28 @@
+name: PR
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: pre-commit/action@v2.0.0
+
+  docker_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Docker image
+        run: |
+          docker build --pull --cache-from unitystation/unitystation_auth .
+  #
+  # test:
+  #   needs: [lint, docker_build]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: test
+  #       run: |
+  #         echo TODO
