@@ -23,6 +23,7 @@ RUN apk add --no-cache libpq \
     && pip install poetry \
     && poetry config virtualenvs.create false \
     && poetry install --no-dev \
+    && pip uninstall poetry -y \
     && apk del --purge .build-deps
 
 COPY src .
