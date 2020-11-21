@@ -4,21 +4,21 @@ on:
     branches: [main, develop]
     tags: ["*"]
 
+env:
+  IMAGE_NAME: unitystation/unitystation_auth
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      # if tag is present, set OPTIONAL_TAG_NAME to ",TAG_NAME" (comma is important)
-      - name: Get Latest Tag
-        if: contains(github.ref, 'refs/tags/')
+      - name: Build image
+        run: docker build --pull --cache-from $IMAGE_NAME -t $IMAGE_NAME:latest .
+
+      - name: Log in into Docker Hub
+        run: echo "${{ secrets.DOCKER_USERNAME }}" | docker login -u ${{ secrets.DOCKER_PASSWORD }} --password-stdin
+
+      - name: Push image to registry
         run: |
-          echo "OPTIONAL_TAG_NAME=,${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-      - name: Build and push Docker image
-        uses: elgohr/Publish-Docker-Github-Action@3.01
-        with:
-          name: unitystation/unitystation_auth
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          cache: true
-          tags: "latest${{ env.OPTIONAL_TAG_NAME }}"
+          ${{ contains(github.ref, 'refs/tags/') }} && docker tag $IMAGE_NAME ${GITHUB_REF#refs/tags/}
+          docker push $IMAGE_NAME
