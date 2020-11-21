@@ -13,10 +13,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build image
-        run: docker build --pull --cache-from $IMAGE_NAME -t $IMAGE_NAME:latest .
+        run: |
+          docker pull $IMAGE_NAME
+          docker build --pull --cache-from $IMAGE_NAME -t $IMAGE_NAME:latest .
 
       - name: Log in into Docker Hub
-        run: echo "${{ secrets.DOCKER_USERNAME }}" | docker login -u ${{ secrets.DOCKER_PASSWORD }} --password-stdin
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
       - name: Push image to registry
         run: |
