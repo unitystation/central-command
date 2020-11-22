@@ -33,4 +33,5 @@ RUN addgroup -S unitystation \
 
 USER auth_server
 
-ENTRYPOINT ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+ENTRYPOINT ["python", "manage.py"]
+CMD ["runserver", "0:8000"]
