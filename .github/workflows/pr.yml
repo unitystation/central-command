@@ -1,7 +1,8 @@
 name: PR
 on:
   pull_request:
-    branches: [main, develop]
+    branches:
+      - "*"
 
 env:
   IMAGE_NAME: unitystation/unitystation_auth
