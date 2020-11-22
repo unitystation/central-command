@@ -1,8 +1,11 @@
 name: Push
 on:
   push:
-    branches: [main, develop]
-    tags: ["*"]
+    branches:
+      - main
+      - develop
+    tags:
+      - "v*"
 
 env:
   IMAGE_NAME: unitystation/unitystation_auth
