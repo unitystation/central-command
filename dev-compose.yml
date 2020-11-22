@@ -1,40 +1,30 @@
 version: "3"
 
+x-django-defaults: &django_defaults
+  build: .
+  env_file: ./.env
+
 services:
   db:
     image: postgres
-    environment:
-      POSTGRES_HOST: $POSTGRES_HOST
-      POSTGRES_PORT: $POSTGRES_PORT
-      POSTGRES_DB: $POSTGRES_DB
-      POSTGRES_USER: $POSTGRES_USER
-      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+    env_file: ./.env
     volumes:
       - db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
-  web:
-    build: .
-    environment:
-      # db
-      POSTGRES_HOST: $POSTGRES_HOST
-      POSTGRES_PORT: $POSTGRES_PORT
-      POSTGRES_DB: $POSTGRES_DB
-      POSTGRES_USER: $POSTGRES_USER
-      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
-      # mail
-      EMAIL_HOST: $EMAIL_HOST
-      EMAIL_PORT: $EMAIL_PORT
-      EMAIL_HOST_USER: $EMAIL_HOST_USER
-      EMAIL_HOST_PASSWORD: $EMAIL_HOST_PASSWORD
-      EMAIL_PAGE_DOMAIN: $EMAIL_PAGE_DOMAIN
-      # django
-      SECRET_KEY: $SECRET_KEY
-    ports:
-      - "8000:8000"
+  web_migration:
+    <<: *django_defaults
+    command: migrate
     depends_on:
       - db
+
+  web:
+    <<: *django_defaults
+    depends_on:
+      - web_migration
+    ports:
+      - "8000:8000"
     volumes:
       - ./src:/src
 
