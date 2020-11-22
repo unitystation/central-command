@@ -3,9 +3,6 @@ on:
   pull_request:
     branches: [main, develop]
 
-env:
-  IMAGE_NAME: unitystation/unitystation_auth
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -14,19 +11,22 @@ jobs:
       - uses: actions/setup-python@v2
       - uses: pre-commit/action@v2.0.0
 
-  docker_build:
+  test:
+    needs: [lint]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build Docker image
+        env:
+          IMAGE_NAME: unitystation/unitystation_auth
         run: |
           docker pull $IMAGE_NAME
-          docker build --pull --cache-from $IMAGE_NAME .
-  #
-  # test:
-  #   needs: [lint, docker_build]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: test
-  #       run: |
-  #         echo TODO
+          docker build --pull --cache-from $IMAGE_NAME -t $IMAGE_NAME .
+      - name: Test
+        env:
+          COMPOSE_CMD: docker-compose -f test-compose.yml
+        run: |
+          $COMPOSE_CMD up -d db
+          sleep 5 # let db initialize
+          $COMPOSE_CMD run test migrate
+          $COMPOSE_CMD run test

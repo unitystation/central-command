@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  db:
+    image: postgres
+    env_file: ./example.env
+
+  test:
+    image: unitystation/unitystation_auth
+    env_file: ./example.env
+    command: test
