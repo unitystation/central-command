@@ -3,7 +3,8 @@ version: "3"
 services:
   db:
     image: postgres
-    env_file: ./example.env
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
 
   test:
     image: unitystation/unitystation_auth
