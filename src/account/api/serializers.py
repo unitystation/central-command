@@ -8,16 +8,12 @@ from django_email_verification import sendConfirm
 from account.models import Account
 
 
-class AccountSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Account
-        fields = ["user_id", "email", "username", "character_settings"]
-
-
 class RegisterAccountSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField(style={"input_type": "password"}, write_only=True)
+
     class Meta:
         model = Account
-        fields = ["email", "username", "password"]
+        fields = ["email", "username", "password", "password2"]
         extra_kwargs = {"password": {"write_only": True}}
 
     def save(self):
@@ -38,9 +34,13 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         filtered_data = dict(data)
+        filtered_data.pop("password2")
         account = Account(**filtered_data)
 
         errors = dict()
+
+        if data.get("password") != data.get("password2"):
+            errors["password"] = "Passwords must match."
 
         try:
             validators.validate_password(data.get("password"), account)
@@ -51,3 +51,9 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return super(RegisterAccountSerializer, self).validate(data)
+
+
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ["email", "username", "user_id", "character_setting"]
