@@ -47,6 +47,7 @@ def account_by_identifiers_view(request):
 
 
 @api_view(["GET"])
+@permission_classes([permissions.AllowAny])
 def character_by_identifier_view(request):
     email = request.data.get("email", None)
     user_id = request.data.get("user_id", None)
