@@ -44,3 +44,27 @@ def account_by_identifiers_view(request):
     else:
         serialized = AccountSerializer(account)
         return Response(status=status.HTTP_302_FOUND, data=serialized.data)
+
+
+@api_view(["GET"])
+def character_by_identifier_view(request):
+    email = request.data.get("email", None)
+    user_id = request.data.get("user_id", None)
+
+    if email is None and user_id is None:
+        err = {"error": "at least one identifier is required to proceed. Mail or ID."}
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=err)
+
+    try:
+        if email is None:
+            account = Account.objects.get(user_id=user_id)
+        else:
+            account = Account.objects.get(email=email)
+    except Account.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    else:
+        serialized = AccountSerializer(account)
+        data = {
+            "character": serialized.data.get("character_setting", "invalid or corrupt!")
+        }
+        return Response(status=status.HTTP_302_FOUND, data=data)
