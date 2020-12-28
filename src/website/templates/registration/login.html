@@ -4,9 +4,12 @@
 
 {% block content %}
 <h2>Log In</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Log In</button>
-</form>
+<div class="login-dark">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-group"><button class="btn btn-primary btn-block" type="submit">Log In</button>
+        <a class="forgot" href="{% url 'password_reset' %}">I forgot my password!</a>
+    </form>
+</div>
 {% endblock %}
