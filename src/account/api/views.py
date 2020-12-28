@@ -66,6 +66,8 @@ def character_by_identifier_view(request):
     else:
         serialized = AccountSerializer(account)
         data = {
-            "character": serialized.data.get("character_setting", "invalid or corrupt!")
+            "character": serialized.data.get(
+                "character_settings", "invalid or corrupt!"
+            )
         }
         return Response(status=status.HTTP_302_FOUND, data=data)
