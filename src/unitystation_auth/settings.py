@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_email_verification",
     "rest_framework",
+    "rest_framework.authtoken",
     "account",
     "website",
     "persistence",
@@ -63,8 +64,8 @@ ROOT_URLCONF = "unitystation_auth.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
-        "APP_DIRS": True,
+        "DIRS": [os.path.join(BASE_DIR, "website", "templates")],
+        "APP_DIRS": False,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -94,9 +95,12 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication"
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
 }
 
 # Email settings
@@ -114,8 +118,8 @@ EMAIL_SERVER = os.environ["EMAIL_HOST"]
 EMAIL_ADDRESS = os.environ["EMAIL_HOST_USER"]
 EMAIL_FROM_ADDRESS = os.environ["EMAIL_HOST_USER"]
 EMAIL_PASSWORD = os.environ["EMAIL_HOST_PASSWORD"]
-EMAIL_MAIL_SUBJECT = "Confirm your email"
-EMAIL_MAIL_HTML = "registration/mail_body.html"
+EMAIL_MAIL_SUBJECT = "Confirm your Unitystation account"
+EMAIL_MAIL_HTML = "registration/confirmation_email.html"
 EMAIL_PAGE_TEMPLATE = "registration/confirm_template.html"
 EMAIL_PAGE_DOMAIN = os.environ["EMAIL_PAGE_DOMAIN"]
 
@@ -154,6 +158,10 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "website", "statics"),
+]
 
 STATIC_URL = "/static/"
 LOGIN_REDIRECT_URL = "home"
