@@ -27,6 +27,7 @@ djangorestframework = "^3.12.1"
 psycopg2-binary = "^2.8.6"
 numpy = "^1.19.4"
 django-email-verification = "^0.0.7"
+django-rest-knox = "^4.1.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.6.0"
