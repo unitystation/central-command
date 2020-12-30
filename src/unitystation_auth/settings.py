@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import os
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,7 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_email_verification",
     "rest_framework",
-    "rest_framework.authtoken",
+    "knox",
     "account",
     "website",
     "persistence",
@@ -64,8 +65,8 @@ ROOT_URLCONF = "unitystation_auth.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "website", "templates")],
-        "APP_DIRS": False,
+        "DIRS": [Path(BASE_DIR, "website", "templates")],
+        "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -95,13 +96,14 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication"
-    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": ["knox.auth.TokenAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
 }
+
+# Token expiration
+REST_KNOX = {"TOKEN_TTL": timedelta(days=30)}
 
 # Email settings
 EMAIL_USE_TLS = True
@@ -159,9 +161,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "website", "statics"),
-]
+STATICFILES_DIRS = [Path(BASE_DIR, "website", "statics")]
 
 STATIC_URL = "/static/"
 LOGIN_REDIRECT_URL = "home"
