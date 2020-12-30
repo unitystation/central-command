@@ -25,6 +25,6 @@ urlpatterns = [
     path("", include("django.contrib.auth.urls")),
     path("email/", include(mail_urls)),
     # API REST FRAMEWORK
-    path("api/account/", include("account.api.urls", "Account api")),
+    path("api/", include("account.api.urls", "Account api")),
     path("api/polysays/", include("persistence.api.urls", "Poly says")),
 ]
