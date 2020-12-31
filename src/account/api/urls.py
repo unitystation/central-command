@@ -4,8 +4,8 @@ from django.urls import path
 from account.api.views import (
     LoginView,
     RegisterAccountView,
-    AccountByIdentifierView,
-    CharacterByIdentifierView,
+    account_by_id_view,
+    character_by_id_view,
 )
 
 app_name = "account"
@@ -15,6 +15,6 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="Login"),
     path("logout/", knox_views.LogoutView.as_view(), name="Logout"),
     path("logoutall/", knox_views.LogoutAllView.as_view(), name="Logout All"),
-    path("get_account/", AccountByIdentifierView.as_view(), name="Get Account"),
-    path("get_character", CharacterByIdentifierView.as_view(), name="Get Character"),
+    path("users/<user_id>/", account_by_id_view, name="Get account"),
+    path("users/<user_id>/character/", character_by_id_view, name="Get Character"),
 ]
