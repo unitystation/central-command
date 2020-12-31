@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import os
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_email_verification",
     "rest_framework",
+    "knox",
     "account",
     "website",
     "persistence",
@@ -63,7 +65,7 @@ ROOT_URLCONF = "unitystation_auth.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "DIRS": [Path(BASE_DIR, "website", "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -85,19 +87,23 @@ WSGI_APPLICATION = "unitystation_auth.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ["POSTGRES_DB"],
-        "USER": os.environ["POSTGRES_USER"],
-        "PASSWORD": os.environ["POSTGRES_PASSWORD"],
-        "HOST": os.environ["POSTGRES_HOST"],
-        "PORT": os.environ["POSTGRES_PORT"],
+        "NAME": os.environ.get("POSTGRES_DB", "postgres"),
+        "USER": os.environ.get("POSTGRES_USER", "postgres"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
+        "HOST": os.environ.get("POSTGRES_HOST", "db"),
+        "PORT": os.environ.get("POSTGRES_PORT", ""),
     }
 }
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ["knox.auth.TokenAuthentication"],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
 }
+
+# Token expiration
+REST_KNOX = {"TOKEN_TTL": timedelta(days=30)}
 
 # Email settings
 EMAIL_USE_TLS = True
@@ -114,8 +120,8 @@ EMAIL_SERVER = os.environ["EMAIL_HOST"]
 EMAIL_ADDRESS = os.environ["EMAIL_HOST_USER"]
 EMAIL_FROM_ADDRESS = os.environ["EMAIL_HOST_USER"]
 EMAIL_PASSWORD = os.environ["EMAIL_HOST_PASSWORD"]
-EMAIL_MAIL_SUBJECT = "Confirm your email"
-EMAIL_MAIL_HTML = "registration/mail_body.html"
+EMAIL_MAIL_SUBJECT = "Confirm your Unitystation account"
+EMAIL_MAIL_HTML = "registration/confirmation_email.html"
 EMAIL_PAGE_TEMPLATE = "registration/confirm_template.html"
 EMAIL_PAGE_DOMAIN = os.environ["EMAIL_PAGE_DOMAIN"]
 
@@ -154,6 +160,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
+
+STATICFILES_DIRS = [Path(BASE_DIR, "website", "statics")]
 
 STATIC_URL = "/static/"
 LOGIN_REDIRECT_URL = "home"

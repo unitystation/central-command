@@ -7,7 +7,7 @@ from .utils import PushID
 class Account(AbstractUser):
     email = models.EmailField(verbose_name="email address", unique=True)
     username = models.CharField(
-        verbose_name="account name", max_length=50, unique=False, blank=False
+        verbose_name="account name", max_length=50, unique=True, blank=False
     )
     user_id = models.CharField(verbose_name="user id", max_length=28, primary_key=True)
     character_settings = models.JSONField(null=True)

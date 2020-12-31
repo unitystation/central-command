@@ -16,6 +16,12 @@ class AccountAdmin(UserAdmin):
             },
         ),
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser")}),
+        (
+            "Character settings",
+            {
+                "fields": ("character_settings",),
+            },
+        ),
     )
     add_fieldsets = (
         (

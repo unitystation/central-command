@@ -21,10 +21,10 @@ from django_email_verification import urls as mail_urls
 urlpatterns = [
     path("", TemplateView.as_view(template_name="home.html"), name="home"),
     path("admin/", admin.site.urls),
-    path("accounts/", include("website.urls")),
-    path("accounts/", include("django.contrib.auth.urls")),
+    path("", include("website.urls")),
+    path("", include("django.contrib.auth.urls")),
     path("email/", include(mail_urls)),
     # API REST FRAMEWORK
-    path("api/account/", include("account.api.urls", "Account api")),
-    path("api/polysays/", include("persistence.api.urls", "Poly says")),
+    path("api/", include("account.api.urls", "Account api")),
+    path("api/", include("persistence.api.urls", "Poly says")),
 ]

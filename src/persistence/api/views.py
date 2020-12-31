@@ -28,3 +28,23 @@ def poly_random_phrase_view(request):
 
     serialized = PolyPhrasesSerializer(phrase)
     return Response(serialized.data)
+
+
+@api_view(["POST"])
+def poly_store_phrase_view(request):
+    try:
+        user = request.user
+        text = request.data.get("phrase")
+
+        if not user or not text:
+            raise Exception("Phrase and user saying it are required!")
+
+        phrase = PolyPhrase.objects.create(said_by=user, phrase=text)
+
+        phrase.save()
+
+    except Exception as e:
+        error = {"error": f"{e}"}
+        return Response(error, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response(status=status.HTTP_200_OK)
