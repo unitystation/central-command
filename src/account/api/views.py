@@ -2,7 +2,9 @@ from knox.views import LoginView as KnoxLoginView
 from knox.models import AuthToken
 from rest_framework import status, generics
 from django.contrib.auth import login
+from django.core.exceptions import PermissionDenied
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 
@@ -41,64 +43,46 @@ class LoginView(KnoxLoginView):
 
         if serializer.is_valid():
             account = serializer.validated_data["user"]
-            st = status.HTTP_200_OK
             login(request, account)
             data = super(LoginView, self).post(request, format=None)
             data["success"] = "Successfully logged in"
+            return data
         else:
             data = serializer.errors
 
         return Response(data=data, status=st)
 
 
-class AccountByIdentifierView(generics.GenericAPIView):
-    def get(self, request):
-        email = request.data.get("email", None)
-        user_id = request.data.get("user_id", None)
+@api_view(["GET"])
+def account_by_id_view(request, user_id):
+    try:
+        if not request.user.is_staff:
+            raise PermissionDenied
 
-        if email is None and user_id is None:
-            err = {
-                "error": "at least one identifier is required to proceed. Mail or ID."
-            }
-            return Response(status=status.HTTP_400_BAD_REQUEST, data=err)
+        account = Account.objects.get(user_id=user_id)
+    except Account.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    except PermissionDenied:
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
-        try:
-            if email is None:
-                account = Account.objects.get(user_id=user_id)
-            else:
-                account = Account.objects.get(email=email)
-        except Account.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        else:
-            serialized = AccountSerializer(account)
-            return Response(status=status.HTTP_302_FOUND, data=serialized.data)
+    serialized = AccountSerializer(account)
+
+    return Response(serialized.data, status=status.HTTP_200_OK)
 
 
-class CharacterByIdentifierView(generics.GenericAPIView):
-    permission_classes = [AllowAny]
+@api_view(["GET"])
+def character_by_id_view(request, user_id):
+    try:
+        character = Account.objects.get(user_id=user_id)
+        if request.user != character:
+            raise PermissionDenied
+    except Account.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    except PermissionDenied:
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
-    def get(self, request):
-        email = request.data.get("email", None)
-        user_id = request.data.get("user_id", None)
+    serialized = AccountSerializer(character)
 
-        if email is None and user_id is None:
-            err = {
-                "error": "at least one identifier is required to proceed. Mail or ID."
-            }
-            return Response(status=status.HTTP_400_BAD_REQUEST, data=err)
-
-        try:
-            if email is None:
-                account = Account.objects.get(user_id=user_id)
-            else:
-                account = Account.objects.get(email=email)
-        except Account.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        else:
-            serialized = AccountSerializer(account)
-            data = {
-                "character": serialized.data.get(
-                    "character_settings", "invalid or corrupt!"
-                )
-            }
-            return Response(status=status.HTTP_302_FOUND, data=data)
+    return Response(
+        serialized.data.get("character_settings"), status=status.HTTP_200_OK
+    )
