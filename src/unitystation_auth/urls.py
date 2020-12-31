@@ -26,5 +26,5 @@ urlpatterns = [
     path("email/", include(mail_urls)),
     # API REST FRAMEWORK
     path("api/", include("account.api.urls", "Account api")),
-    path("api/polysays/", include("persistence.api.urls", "Poly says")),
+    path("api/", include("persistence.api.urls", "Poly says")),
 ]
