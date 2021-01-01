@@ -27,8 +27,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build Docker image
-        env:
-          IMAGE_NAME: unitystation/unitystation_auth
         run: |
           docker pull $IMAGE_NAME
           docker build --pull --cache-from $IMAGE_NAME -t $IMAGE_NAME .

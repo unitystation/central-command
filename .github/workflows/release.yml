@@ -24,6 +24,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: [release]
+    env:
+      IMAGE_NAME: unitystation/unitystation_auth
     steps:
       - uses: actions/checkout@v2
         with:
