@@ -20,5 +20,5 @@ class Account(AbstractUser):
 
     def save(self, *args, **kwargs):
         if not self.user_id:
-            self.user_id = PushID().next_id()
+            self.user_id = PushID.next_id()
         super().save(*args, **kwargs)
