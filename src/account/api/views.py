@@ -1,18 +1,22 @@
-from knox.views import LoginView as KnoxLoginView
+from knox.views import LoginView
 from knox.models import AuthToken
 from rest_framework import status, generics
 from django.contrib.auth import login
 from django.core.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 
 from account.models import Account
-from account.api.serializers import AccountSerializer, RegisterAccountSerializer
+from account.api.serializers import (
+    AccountSerializer,
+    UpdateAccountSerializer,
+    RegisterAccountSerializer,
+    UpdateCharacterSerializer,
+)
 
 
-class RegisterAccountView(generics.GenericAPIView):
+class RegisterAccount(generics.GenericAPIView):
     serializer_class = RegisterAccountSerializer
     permission_classes = [AllowAny]
 
@@ -34,17 +38,17 @@ class RegisterAccountView(generics.GenericAPIView):
         return Response(status=st, data=data)
 
 
-class LoginView(KnoxLoginView):
+class Login(LoginView):
     permission_classes = [AllowAny]
 
-    def post(self, request, format=None):
+    def post(self, request, **kwargs):
         serializer = AuthTokenSerializer(data=request.data)
         st = status.HTTP_400_BAD_REQUEST
 
         if serializer.is_valid():
             account = serializer.validated_data["user"]
             login(request, account)
-            data = super(LoginView, self).post(request, format=None)
+            data = super(Login, self).post(request, format=None)
             data["success"] = "Successfully logged in"
             return data
         else:
@@ -53,36 +57,71 @@ class LoginView(KnoxLoginView):
         return Response(data=data, status=st)
 
 
-@api_view(["GET"])
-def account_by_id_view(request, user_id):
-    try:
-        if not request.user.is_staff:
-            raise PermissionDenied
+class AccountById(generics.RetrieveUpdateAPIView):
+    serializer_class = UpdateAccountSerializer
+    lookup_field = "user_id"
 
-        account = Account.objects.get(user_id=user_id)
-    except Account.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    except PermissionDenied:
-        return Response(status=status.HTTP_403_FORBIDDEN)
+    def get(self, request, *args, **kwargs):
+        try:
+            account = Account.objects.get(user_id=self.kwargs["user_id"])
 
-    serialized = AccountSerializer(account)
+            if not request.user.is_staff and not account == request.user:
+                raise PermissionDenied
 
-    return Response(serialized.data, status=status.HTTP_200_OK)
+        except Account.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        serialized = AccountSerializer(account)
+
+        return Response(serialized.data, status=status.HTTP_200_OK)
+
+    def put(self, request, *args, **kwargs):
+        try:
+            account = Account.objects.get(user_id=self.kwargs["user_id"])
+
+            if not request.user == account:
+                raise PermissionDenied
+        except Account.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        return self.update(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Account.objects.filter(user_id=self.kwargs["user_id"])
 
 
-@api_view(["GET"])
-def character_by_id_view(request, user_id):
-    try:
-        character = Account.objects.get(user_id=user_id)
-        if request.user != character:
-            raise PermissionDenied
-    except Account.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    except PermissionDenied:
-        return Response(status=status.HTTP_403_FORBIDDEN)
+class CharacterById(generics.RetrieveUpdateAPIView):
+    serializer_class = UpdateCharacterSerializer
+    lookup_field = "user_id"
 
-    serialized = AccountSerializer(character)
+    def get(self, request, *args, **kwargs):
+        try:
+            character = Account.objects.get(user_id=self.kwargs["user_id"])
+            if request.user != character:
+                raise PermissionDenied
+        except Account.DoesNotExist:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        except PermissionDenied:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
-    return Response(
-        serialized.data.get("character_settings"), status=status.HTTP_200_OK
-    )
+        serialized = AccountSerializer(character)
+
+        return Response(
+            serialized.data.get("character_settings"), status=status.HTTP_200_OK
+        )
+
+    def put(self, request, *args, **kwargs):
+        try:
+            character = Account.objects.get(user_id=self.kwargs["user_id"])
+            if request.user != character:
+                raise PermissionDenied
+        except Account.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        self.update(request, *args, **kwargs)
