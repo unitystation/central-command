@@ -11,6 +11,7 @@ class AccountCreationForm(UserCreationForm):
         fields = ("email", "username")
 
     def save(self, commit=True):
+        self.clean()
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
         if commit and settings.REQUIRE_EMAIL_CONFIRMATION:
