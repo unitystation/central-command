@@ -135,3 +135,6 @@ dmypy.json
 # Legacy files
 .envs/
 DB/
+
+# settings and config files
+src/badwords.txt
