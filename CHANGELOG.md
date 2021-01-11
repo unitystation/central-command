@@ -1,3 +1,20 @@
+# [1.1.0](https://github.com/unitystation/unitystation_auth/compare/v1.0.0...v1.1.0) (2021-01-11)
+
+
+### Bug Fixes
+
+* **account:** fix slurs validator triggering when no bad words list has been created ([0620c7a](https://github.com/unitystation/unitystation_auth/commit/0620c7a4beee57c89e009a5f173f40d1ade64ee8))
+
+
+### Features
+
+* **account:** allow character_settings to be visualized in admin view ([2c09aff](https://github.com/unitystation/unitystation_auth/commit/2c09aff46830cbcf6efaf94376735de56706d3eb))
+* **account:** api endpoints to get character data ([ff90616](https://github.com/unitystation/unitystation_auth/commit/ff90616079518f4b900f5e2b0a832be8e9b3bb71))
+* **account:** endpoint for token generation ([acbe3d6](https://github.com/unitystation/unitystation_auth/commit/acbe3d6de30be91b7b70640ee79dc8e20bc80ac1))
+* **account:** introduce custom validators for username field ([3eb2414](https://github.com/unitystation/unitystation_auth/commit/3eb2414bc6209d32df24e9d0dd35e927e60d7639))
+* **account:** make character settings endpoint public ([e360b35](https://github.com/unitystation/unitystation_auth/commit/e360b356083d6cda250eeb111c53fc1097e10327))
+* **api:** new register, login, logout and logoutall views ([cea831e](https://github.com/unitystation/unitystation_auth/commit/cea831eba6878092dea709ad7bf7e6f1eae88f9c))
+
 # 1.0.0 (2020-11-22)
 
 
