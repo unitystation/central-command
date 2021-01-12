@@ -63,8 +63,6 @@ class PushID:
 
         assert (
             len(uid) == cls.UID_CHARS
-        ), f"UID length should be {0}, got {1}: {3}".format(
-            cls.UID_CHARS, len(uid), uid
-        )
+        ), f"UID length should be {cls.UID_CHARS}, got {len(uid)}: {uid}"
 
         return uid
