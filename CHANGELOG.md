@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/unitystation/unitystation_auth/compare/v1.1.0...v1.1.1) (2021-05-22)
+
+
+### Bug Fixes
+
+* **account:** fix crash when no badwords.txt file existed ([ba5bd47](https://github.com/unitystation/unitystation_auth/commit/ba5bd4718b00c4db9c7116bf767a80792058c916))
+
 # [1.1.0](https://github.com/unitystation/unitystation_auth/compare/v1.0.0...v1.1.0) (2021-01-11)
 
 
