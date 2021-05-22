@@ -35,7 +35,6 @@ class NoBadWordsValidator(validators.RegexValidator):
             with open("badwords.txt", "r", encoding="UTF-8") as f:
                 bad_list = f.readlines()
         except FileNotFoundError:
-            self.regex = None
             self.inverse_match = False
             return
         bad_list = [w.replace("\n", "").strip() for w in bad_list]
