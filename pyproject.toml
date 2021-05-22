@@ -21,7 +21,7 @@ description = "Authentication system for Unitystation"
 authors = ["Your Name <you@example.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 Django = "^3.1.2"
 djangorestframework = "^3.12.1"
 psycopg2-binary = "^2.8.6"

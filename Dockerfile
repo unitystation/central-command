@@ -1,4 +1,4 @@
-FROM python:3.8-alpine3.12
+FROM python:3.9-alpine3.13
 
 # enables proper stdout flushing
 ENV PYTHONUNBUFFERED yes
@@ -15,10 +15,13 @@ COPY poetry.lock pyproject.toml ./
 
 RUN apk add --no-cache libpq \
     && apk add --no-cache --virtual .build-deps \
+    # https://cryptography.io/en/latest/installation/#alpine
     gcc \
     musl-dev \
+    python3-dev \
     libffi-dev \
     openssl-dev \
+    cargo \
     postgresql-dev \
     && pip install poetry \
     && poetry config virtualenvs.create false \
