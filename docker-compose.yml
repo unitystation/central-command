@@ -1,7 +1,7 @@
 version: "3"
 
 x-django-defaults: &django_defaults
-  image: unitystation/unitystation_auth
+  image: unitystation/central-command
   env_file: ./.env
 
 services:

@@ -15,10 +15,10 @@ lines_between_types = 1
 skip = "migrations"
 
 [tool.poetry]
-name = "unitystation_auth"
+name = "central-command"
 version = "0.1.0"
-description = "Authentication system for Unitystation"
-authors = ["Your Name <you@example.com>"]
+description = "All-in-one backend application for Unitystation"
+authors = ["Andrés Riquelme <andresfranco.rs@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
