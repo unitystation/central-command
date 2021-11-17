@@ -30,11 +30,20 @@ RUN apk add --no-cache libpq \
 
 COPY src .
 
-RUN addgroup -S unitystation \
-    && adduser -S auth_server -G unitystation \
-    && chown -R auth_server:unitystation /src
+ENV home=/home/website
+RUN mkdir $home
+RUN mkdir $home/statics
+RUN mkdir $home/media
 
-USER auth_server
+# I'm too dumb to make user permissions over shared volumes work
+#RUN addgroup -S unitystation \
+#    && adduser -S central_command -G unitystation \
+#    && chown -R central_command:unitystation /src \
+#    && chown -R central_command:unitystation $home
+#
+#USER central_command
 
-ENTRYPOINT ["python", "manage.py"]
-CMD ["runserver", "0:8000"]
+RUN sed -i 's/\r$//g' entrypoint.sh
+RUN chmod +x entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]

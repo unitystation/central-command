@@ -23,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ["SECRET_KEY"]
+SECRET_KEY = os.environ.get("SECRET_KEY", "foo")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
+DEBUG = bool(os.environ.get("DJANGO_DEBUG", default="1"))
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*"] if DEBUG else ["localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -43,12 +43,11 @@ INSTALLED_APPS = [
     "django_email_verification",
     "rest_framework",
     "knox",
-    "account",
-    "website",
     "persistence",
 ]
 
-AUTH_USER_MODEL = "account.Account"
+# What user model to use for authentication?
+# AUTH_USER_MODEL = "account.Account"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -65,7 +64,7 @@ ROOT_URLCONF = "central-command.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [Path(BASE_DIR, "website", "templates")],
+        # "DIRS": [Path(BASE_DIR, "website", "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -87,11 +86,11 @@ WSGI_APPLICATION = "central-command.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB", "postgres"),
-        "USER": os.environ.get("POSTGRES_USER", "postgres"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
-        "HOST": os.environ.get("POSTGRES_HOST", "db"),
-        "PORT": os.environ.get("POSTGRES_PORT", ""),
+        "NAME": os.environ.get("DB_NAME", BASE_DIR / "db.sqlite3"),
+        "USER": os.environ.get("DB_USER", "postgres"),
+        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+        "HOST": os.environ.get("DB_HOST", "localhost"),
+        "PORT": os.environ.get("DB_PORT", ""),
     }
 }
 
@@ -116,10 +115,10 @@ REQUIRE_EMAIL_CONFIRMATION = True
 
 # Email confirmation settings
 EMAIL_ACTIVE_FIELD = "is_active"
-EMAIL_SERVER = os.environ["EMAIL_HOST"]
-EMAIL_ADDRESS = os.environ["EMAIL_HOST_USER"]
-EMAIL_FROM_ADDRESS = os.environ["EMAIL_HOST_USER"]
-EMAIL_PASSWORD = os.environ["EMAIL_HOST_PASSWORD"]
+EMAIL_SERVER = os.environ.get("EMAIL_HOST")
+EMAIL_ADDRESS = os.environ.get("EMAIL_HOST_USER")
+EMAIL_FROM_ADDRESS = os.environ.get("EMAIL_HOST_USER")
+EMAIL_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_MAIL_SUBJECT = "Confirm your Unitystation account"
 EMAIL_MAIL_HTML = "registration/confirmation_email.html"
 EMAIL_PAGE_TEMPLATE = "registration/confirm_template.html"
@@ -161,8 +160,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATICFILES_DIRS = [Path(BASE_DIR, "website", "statics")]
-
 STATIC_URL = "/static/"
-LOGIN_REDIRECT_URL = "home"
-LOGOUT_REDIRECT_URL = "home"
+MEDIA_URL = "/media/"
+STATIC_ROOT = Path("/home", "website", "statics")
+MEDIA_ROOT = Path("/home", "website", "media")
+
+# LOGIN_REDIRECT_URL = "home"
+# LOGOUT_REDIRECT_URL = "home"

@@ -1,12 +1,8 @@
 version: "3"
 
-x-django-defaults: &django_defaults
-  build: .
-  env_file: ./.env
-
 services:
   db:
-    image: postgres
+    image: postgres:14.1-alpine
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
@@ -14,20 +10,19 @@ services:
     ports:
       - "5432:5432"
 
-  web_migration:
-    <<: *django_defaults
-    command: migrate
-    depends_on:
-      - db
-
   web:
-    <<: *django_defaults
     depends_on:
-      - web_migration
+    - db
+    build: .
+    env_file: ./.env
     ports:
       - "8000:8000"
     volumes:
       - ./src:/src
+    command:
+      - python manage.py runserver 0.0.0.0:8000
 
 volumes:
   db-data:
+  static-volume:
+  media-volume:

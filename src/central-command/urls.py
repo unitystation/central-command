@@ -18,13 +18,11 @@ from django.contrib import admin
 from django.views.generic.base import TemplateView
 from django_email_verification import urls as mail_urls
 
+
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="home.html"), name="home"),
+    path(r'', admin.site.urls),
     path("admin/", admin.site.urls),
-    path("", include("website.urls")),
     path("", include("django.contrib.auth.urls")),
     path("email/", include(mail_urls)),
     # API REST FRAMEWORK
-    path("api/", include("account.api.urls", "Account api")),
-    path("api/", include("persistence.api.urls", "Poly says")),
 ]
