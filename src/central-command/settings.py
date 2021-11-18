@@ -43,11 +43,12 @@ INSTALLED_APPS = [
     "django_email_verification",
     "rest_framework",
     "knox",
+    "accounts",
     "persistence",
 ]
 
 # What user model to use for authentication?
-# AUTH_USER_MODEL = "account.Account"
+AUTH_USER_MODEL = "accounts.Account"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -64,7 +65,7 @@ ROOT_URLCONF = "central-command.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        # "DIRS": [Path(BASE_DIR, "website", "templates")],
+        "DIRS": [Path(BASE_DIR, "website", "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -106,10 +107,10 @@ REST_KNOX = {"TOKEN_TTL": timedelta(days=30)}
 
 # Email settings
 EMAIL_USE_TLS = True
-EMAIL_HOST = os.environ["EMAIL_HOST"]
-EMAIL_PORT = int(os.environ["EMAIL_PORT"])
-EMAIL_HOST_USER = os.environ["EMAIL_HOST_USER"]
-EMAIL_HOST_PASSWORD = os.environ["EMAIL_HOST_PASSWORD"]
+EMAIL_HOST = os.environ.get("EMAIL_HOST")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 1337))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 REQUIRE_EMAIL_CONFIRMATION = True
 
@@ -122,7 +123,7 @@ EMAIL_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_MAIL_SUBJECT = "Confirm your Unitystation account"
 EMAIL_MAIL_HTML = "registration/confirmation_email.html"
 EMAIL_PAGE_TEMPLATE = "registration/confirm_template.html"
-EMAIL_PAGE_DOMAIN = os.environ["EMAIL_PAGE_DOMAIN"]
+EMAIL_PAGE_DOMAIN = os.environ.get("EMAIL_PAGE_DOMAIN")
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -167,3 +168,5 @@ MEDIA_ROOT = Path("/home", "website", "media")
 
 # LOGIN_REDIRECT_URL = "home"
 # LOGOUT_REDIRECT_URL = "home"
+
+DEFAULT_AUTO_FIELD='django.db.models.BigAutoField'

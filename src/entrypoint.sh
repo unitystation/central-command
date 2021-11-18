@@ -25,7 +25,7 @@ fi
 #python manage.py flush --no-input
 
 # takes ORM models and makes the sql statements, we shouldn't need to do this since we're committing the migrations
-#python manage.py makemigrations --noinput
+python manage.py makemigrations --noinput
 
 # applies migrations and creates/updates/deletes tables
 python manage.py migrate --noinput

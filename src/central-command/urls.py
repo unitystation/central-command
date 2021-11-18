@@ -15,14 +15,15 @@ Including another URLconf
 """
 from django.urls import path, include
 from django.contrib import admin
-from django.views.generic.base import TemplateView
 from django_email_verification import urls as mail_urls
 
 
 urlpatterns = [
-    path(r'', admin.site.urls),
+    # path(r'', admin.site.urls),
     path("admin/", admin.site.urls),
     path("", include("django.contrib.auth.urls")),
     path("email/", include(mail_urls)),
     # API REST FRAMEWORK
+    path("api/accounts/", include("accounts.api.urls", "Accounts API")),
+    path("api/persistence/", include("persistence.api.urls")),
 ]

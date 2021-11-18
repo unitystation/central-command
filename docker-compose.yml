@@ -14,10 +14,10 @@ services:
       - db-data:/var/lib/postgresql/data
 
   web:
-#    image: unitystation/central-command
+#    build: .
+    image: unitystation/central-command:latest
     environment:
       - DEBUG=0
-    build: .
     env_file: ./.env
     expose:
       - 8000
