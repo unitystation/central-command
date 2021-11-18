@@ -9,7 +9,6 @@ class Account(AbstractUser):
     email = models.EmailField(verbose_name="Email address", unique=True)
     """ Email address used to login """
 
-
     account_identifier = models.CharField(
         verbose_name="Account identifier",
         max_length=28,
@@ -17,7 +16,6 @@ class Account(AbstractUser):
         validators=[AccountNameValidator()],
     )
     """ account identifier, unique indentifier that can be used to identify this account (banlists, job bans, etc). Can't be ever changed. """
-
 
     username = models.CharField(
         verbose_name="Public username",
@@ -27,10 +25,8 @@ class Account(AbstractUser):
     )
     """ public username, shows in OOC, can be changed whenever. """
 
-
     is_verified = models.BooleanField(default=False)
     """ is this account verified to be who they claim to be? Are they famous?!"""
-
 
     legacy_id = models.CharField(
         verbose_name="Legacy ID",
@@ -40,13 +36,11 @@ class Account(AbstractUser):
     )
     """ legacy id, represents the old strings we used to identify accounts on Firebase. """
 
-
     characters_data = models.JSONField(
         verbose_name="Characters data",
         default=dict,
     )
     """ all characters data is here """
-
 
     is_authorized_server = models.BooleanField(default=False)
     """Can this account broadcast the server state to the server list api? Can this account write to persistence layer?"""

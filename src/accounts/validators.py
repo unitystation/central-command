@@ -1,5 +1,5 @@
-from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.utils.deconstruct import deconstructible
+from django.contrib.auth.validators import ASCIIUsernameValidator
 
 
 @deconstructible()

@@ -2,19 +2,23 @@ from knox import views as knox_views
 from django.urls import path
 
 from .views import (
-    LoginWithTokenView,
-    LoginWithCredentialsView,
-    RegisterAccountView,
     UpdateAccountView,
+    LoginWithTokenView,
+    RegisterAccountView,
     UpdateCharactersView,
     PublicAccountDataView,
+    LoginWithCredentialsView,
 )
 
 app_name = "account"
 
 urlpatterns = [
     path("login-token", LoginWithTokenView.as_view(), name="login-token"),
-    path("login-credentials", LoginWithCredentialsView.as_view(), name="login-credentials"),
+    path(
+        "login-credentials",
+        LoginWithCredentialsView.as_view(),
+        name="login-credentials",
+    ),
     path("register", RegisterAccountView.as_view(), name="register"),
     path("update-account", UpdateAccountView.as_view(), name="update"),
     path("update-characters", UpdateCharactersView.as_view(), name="update-characters"),

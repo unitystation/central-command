@@ -1,10 +1,12 @@
 from rest_framework import status, permissions
-from rest_framework.exceptions import ValidationError
-from rest_framework.response import Response
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from rest_framework.generics import GenericAPIView
-from ..models import PolyPhrase, Other
-from .serializers import PolyPhraseSerializer, OtherSerializer
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
+
+from ..models import Other, PolyPhrase
+from .serializers import OtherSerializer, PolyPhraseSerializer
+
 
 class ReadOtherDataView(GenericAPIView):
     serializer_class = OtherSerializer
@@ -22,6 +24,7 @@ class ReadOtherDataView(GenericAPIView):
             return Response(data, status=status.HTTP_403_FORBIDDEN)
         serializer = self.serializer_class(other)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class WriteOtherDataView(GenericAPIView):
     serializer_class = OtherSerializer
@@ -50,6 +53,7 @@ class WriteOtherDataView(GenericAPIView):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+
 class CreateOtherDataView(GenericAPIView):
     serializer_class = OtherSerializer
 
@@ -70,6 +74,7 @@ class CreateOtherDataView(GenericAPIView):
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 class RandomPolyPhraseView(GenericAPIView):
     permission_classes = (permissions.AllowAny,)
