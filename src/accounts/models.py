@@ -1,49 +1,58 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-from .validators import AccountNameValidator
+from .validators import UsernameValidator, AccountNameValidator
 
 
 class Account(AbstractUser):
 
-    email = models.EmailField(verbose_name="Email address", unique=True)
-    """ Email address used to login """
+    email = models.EmailField(
+        verbose_name="Email address",
+        unique=True,
+        help_text="Email address must be unique. It is used to login and confirm the account.",
+    )
 
     account_identifier = models.CharField(
         verbose_name="Account identifier",
         max_length=28,
         primary_key=True,
         validators=[AccountNameValidator()],
+        help_text="Account identifier is used to identify your account. This will be used for bans, job bans, etc and can't ever be changed",
     )
-    """ account identifier, unique indentifier that can be used to identify this account (banlists, job bans, etc). Can't be ever changed. """
 
     username = models.CharField(
         verbose_name="Public username",
         max_length=28,
         unique=False,
-        validators=[AccountNameValidator()],
+        validators=[UsernameValidator()],
+        help_text="Public username is used to identify your account publicly and shows in OOC. This can be changed at any time",
     )
-    """ public username, shows in OOC, can be changed whenever. """
 
-    is_verified = models.BooleanField(default=False)
-    """ is this account verified to be who they claim to be? Are they famous?!"""
+    is_verified = models.BooleanField(
+        default=False,
+        verbose_name="Verified",
+        help_text="Is this account verified to be who they claim to be? Are they famous?!",
+    )
 
     legacy_id = models.CharField(
         verbose_name="Legacy ID",
         max_length=28,
         blank=True,
         default="null",
+        help_text="Legacy ID is used to identify your account in the old database. This is used for bans, job bans, etc and can't ever be changed",
     )
-    """ legacy id, represents the old strings we used to identify accounts on Firebase. """
 
     characters_data = models.JSONField(
         verbose_name="Characters data",
         default=dict,
+        help_text="Characters data is used to store all the characters associated with this account.",
     )
-    """ all characters data is here """
 
-    is_authorized_server = models.BooleanField(default=False)
-    """Can this account broadcast the server state to the server list api? Can this account write to persistence layer?"""
+    is_authorized_server = models.BooleanField(
+        default=False,
+        verbose_name="Authorized server",
+        help_text="Can this account broadcast the server state to the server list api? Can this account write to persistence layer?",
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["account_identifier", "username"]
