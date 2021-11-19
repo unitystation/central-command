@@ -14,7 +14,6 @@ services:
       - db-data:/var/lib/postgresql/data
 
   web:
-#    build: .
     image: unitystation/central-command:latest
     environment:
       - DEBUG=0
