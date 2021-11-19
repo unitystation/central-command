@@ -25,8 +25,10 @@ class AccountAdminView(admin.ModelAdmin):
         ("Characters", {"classes": ("wide",), "fields": ("characters_data",)}),
         (
             "Authorization",
-            {"classes": ("wide",), "fields": ("is_verified", "is_authorized_server")},
+            {
+                "classes": ("wide",),
+                "fields": ("is_active", "is_verified", "is_authorized_server"),
+            },
         ),
         ("Legacy", {"classes": ("wide",), "fields": ("legacy_id",)}),
     )
-    # readonly_fields = ('account_identifier',)
