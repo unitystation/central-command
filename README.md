@@ -1,6 +1,15 @@
-# unitystation_auth
-![Docker Image Version (latest by date)](https://img.shields.io/docker/v/unitystation/unitystation_auth)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/38cce37d4c854ca48645fd5ecc9cae61)](https://www.codacy.com/gh/unitystation/unitystation_auth/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=unitystation/unitystation_auth&amp;utm_campaign=Badge_Grade)
+# Central Command
+![Docker Image Version (latest by date)](https://img.shields.io/docker/v/unitystation/central-command?sort=date)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/38cce37d4c854ca48645fd5ecc9cae61)](https://www.codacy.com/gh/unitystation/central-command/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=unitystation/central-command&amp;utm_campaign=Badge_Grade)
+
+The all-in-one backend application for [Unitystation](https://github.com/unitystation/unitystation)
+
+### Features
+- Account managment and user validation.
+- Server list managment.
+- In-game persistence.
+- Works cross-fork!
+- Modular architecture.
 
 ### Development guide
 #### Setting up Docker
