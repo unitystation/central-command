@@ -11,7 +11,7 @@ on:
       - "v*"
 
 env:
-  IMAGE_NAME: unitystation/unitystation_auth
+  IMAGE_NAME: unitystation/central-command
 
 jobs:
   lint:

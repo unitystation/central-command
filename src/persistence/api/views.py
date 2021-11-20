@@ -1,50 +1,111 @@
 from rest_framework import status, permissions
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 
-from persistence.models import PolyPhrase
-from persistence.api.serializers import PolyPhrasesSerializer
-
-
-@api_view(["GET"])
-def poly_phrase_by_id_view(request, phrase_id):
-    try:
-        phrase = PolyPhrase.objects.get(phrase_id=phrase_id)
-    except PolyPhrase.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    serialized = PolyPhrasesSerializer(phrase)
-    return Response(serialized.data)
+from ..models import Other, PolyPhrase
+from .serializers import OtherSerializer, PolyPhraseSerializer
 
 
-@api_view(["GET"])
-@permission_classes([permissions.AllowAny])
-def poly_random_phrase_view(request):
-    try:
-        phrase = PolyPhrase.objects.order_by("?").first()
-    except Exception as e:
-        error = {"error": f"{e}"}
-        return Response(error, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+class ReadOtherDataView(GenericAPIView):
+    serializer_class = OtherSerializer
 
-    serialized = PolyPhrasesSerializer(phrase)
-    return Response(serialized.data)
+    def get(self, request):
+        try:
+            other = Other.objects.get(pk=request.user.pk)
+            if request.user != other.account:
+                raise PermissionDenied
+        except ObjectDoesNotExist:
+            data = {"error": "No data for this account could be found!"}
+            return Response(data, status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            data = {"error": "You do not have permission to view this data!"}
+            return Response(data, status=status.HTTP_403_FORBIDDEN)
+        serializer = self.serializer_class(other)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(["POST"])
-def poly_store_phrase_view(request):
-    try:
-        user = request.user
-        text = request.data.get("phrase")
+class WriteOtherDataView(GenericAPIView):
+    serializer_class = OtherSerializer
 
-        if not user or not text:
-            raise Exception("Phrase and user saying it are required!")
+    def post(self, request):
+        try:
+            other = Other.objects.get(pk=request.user.pk)
+            if request.user != other.account or not request.user.is_authorized_server:
+                raise PermissionDenied
+        except ObjectDoesNotExist:
+            data = {"error": "No data for this account could be found!"}
+            return Response(data, status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            data = {"error": "You do not have permission to write this data!"}
+            return Response(data, status=status.HTTP_403_FORBIDDEN)
 
-        phrase = PolyPhrase.objects.create(said_by=user, phrase=text)
+        data = {"account": request.user.pk}
+        data["other_data"] = request.data.get("other_data")
 
-        phrase.save()
+        serializer = OtherSerializer(other, data=data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            data = {"error": str(e)}
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    except Exception as e:
-        error = {"error": f"{e}"}
-        return Response(error, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return Response(status=status.HTTP_200_OK)
+
+class CreateOtherDataView(GenericAPIView):
+    serializer_class = OtherSerializer
+
+    def post(self, request):
+        data = {"account": request.user.pk}
+        data["other_data"] = request.data.get("other_data")
+        serializer = OtherSerializer(data=data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+            if not request.user.is_authorized_server:
+                raise PermissionDenied
+        except ValidationError as e:
+            response = {"error": str(e), "data": data}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionDenied as e:
+            response = {"error": str(e)}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class RandomPolyPhraseView(GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = PolyPhraseSerializer
+
+    def get(self, request):
+        try:
+            if PolyPhrase.objects.count() == 0:
+                raise ObjectDoesNotExist
+            phrase = PolyPhrase.objects.order_by("?").first()
+        except ObjectDoesNotExist:
+            data = {"error": "No phrases could be found!"}
+            return Response(data, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(phrase)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class WritePolyPhraseView(GenericAPIView):
+    serializer_class = PolyPhraseSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            if not request.user.is_authorized_server:
+                raise PermissionDenied
+        except ValidationError as e:
+            data = {"error": str(e)}
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionDenied:
+            data = {"error": "You do not have permission to write this data!"}
+            return Response(data, status=status.HTTP_403_FORBIDDEN)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
