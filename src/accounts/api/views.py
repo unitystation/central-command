@@ -18,6 +18,7 @@ from .serializers import (
 
 
 class PublicAccountDataView(RetrieveAPIView):
+    permission_classes = (AllowAny,)
     queryset = Account.objects.all()
     serializer_class = PublicAccountDataSerializer
 
