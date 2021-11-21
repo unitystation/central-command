@@ -3,7 +3,6 @@ from django.urls import path
 from .views import (
     ReadOtherDataView,
     WriteOtherDataView,
-    CreateOtherDataView,
     WritePolyPhraseView,
     RandomPolyPhraseView,
 )
@@ -11,7 +10,6 @@ from .views import (
 app_name = "persistence"
 
 urlpatterns = [
-    path("other-data/create", CreateOtherDataView.as_view(), name="create"),
     path("other-data/read", ReadOtherDataView.as_view(), name="read"),
     path("other-data/write", WriteOtherDataView.as_view(), name="write"),
     path("poly-says", RandomPolyPhraseView.as_view(), name="poly-says"),

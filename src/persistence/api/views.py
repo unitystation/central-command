@@ -14,8 +14,6 @@ class ReadOtherDataView(GenericAPIView):
     def get(self, request):
         try:
             other = Other.objects.get(pk=request.user.pk)
-            if request.user != other.account:
-                raise PermissionDenied
         except ObjectDoesNotExist:
             data = {"error": "No data for this account could be found!"}
             return Response(data, status=status.HTTP_404_NOT_FOUND)
@@ -30,50 +28,40 @@ class WriteOtherDataView(GenericAPIView):
     serializer_class = OtherSerializer
 
     def post(self, request):
-        try:
-            other = Other.objects.get(pk=request.user.pk)
-            if request.user != other.account or not request.user.is_authorized_server:
-                raise PermissionDenied
-        except ObjectDoesNotExist:
-            data = {"error": "No data for this account could be found!"}
-            return Response(data, status=status.HTTP_404_NOT_FOUND)
-        except PermissionDenied:
-            data = {"error": "You do not have permission to write this data!"}
-            return Response(data, status=status.HTTP_403_FORBIDDEN)
-
         data = {"account": request.user.pk}
         data["other_data"] = request.data.get("other_data")
 
-        serializer = OtherSerializer(other, data=data)
         try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            data = {"error": str(e)}
-            return Response(data, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class CreateOtherDataView(GenericAPIView):
-    serializer_class = OtherSerializer
-
-    def post(self, request):
-        data = {"account": request.user.pk}
-        data["other_data"] = request.data.get("other_data")
-        serializer = OtherSerializer(data=data)
-
-        try:
-            serializer.is_valid(raise_exception=True)
             if not request.user.is_authorized_server:
                 raise PermissionDenied
+            other = Other.objects.get(pk=request.user.pk)
+        except ObjectDoesNotExist:
+            serializer = self.serializer_class(data=data)
+            return self.try_write_to_record(serializer)
+        except PermissionDenied:
+            data = {"error": "You do not have permission to edit this data!"}
+            return Response(data, status=status.HTTP_403_FORBIDDEN)
+        else:
+            data = self.update_other_data_dict(data, other.other_data)
+            serializer = self.serializer_class(other, data=data)
+            return self.try_write_to_record(serializer)
+
+    def update_other_data_dict(self, new_data: dict, old_data: dict) -> dict:
+        final_data = {"account": new_data["account"]}
+        for key, value in new_data.get("other_data").items():
+            old_data[key] = value
+        final_data["other_data"] = old_data
+        return final_data
+
+    def try_write_to_record(self, serializer: OtherSerializer) -> Response:
+        try:
+            serializer.is_valid(raise_exception=True)
         except ValidationError as e:
-            response = {"error": str(e), "data": data}
-            return Response(response, status=status.HTTP_400_BAD_REQUEST)
-        except PermissionDenied as e:
-            response = {"error": str(e)}
-            return Response(response, status=status.HTTP_403_FORBIDDEN)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            data = {"error": e.detail}
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class RandomPolyPhraseView(GenericAPIView):
