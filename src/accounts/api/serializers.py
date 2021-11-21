@@ -51,9 +51,15 @@ class UpdateAccountSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
     def update(self, instance, validated_data):
+        old_email = instance.email
         instance.username = validated_data.get("username", instance.username)
         instance.email = validated_data.get("email", instance.email)
         instance.set_password(validated_data.get("password", instance.password))
+
+        if old_email != instance.email and settings.REQUIRE_EMAIL_CONFIRMATION:
+            instance.is_active = False
+            sendConfirm(instance)
+
         instance.save()
         return instance
 
