@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.serializers import ValidationError
 
 from ..models import Account
+from ..exceptions import MissingMailConfirmation
 from .serializers import (
     UpdateAccountSerializer,
     RegisterAccountSerializer,
@@ -27,6 +28,12 @@ class LoginWithTokenView(KnoxLoginView):
     permission_classes = (AllowAny,)
 
     def get_post_response_data(self, request, token, instance):
+        try:
+            if not request.user.is_active:
+                raise MissingMailConfirmation()
+        except MissingMailConfirmation as e:
+            return {"error": e.detail}
+
         serializer = self.get_user_serializer_class()
 
         data = {"token": token}
@@ -43,11 +50,21 @@ class LoginWithCredentialsView(GenericAPIView):
     serializer_class = LoginWithCredentialsSerializer
 
     def post(self, request):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
+            account = Account.objects.get(email=serializer.data["email"])
+            if not account.is_active:
+                raise MissingMailConfirmation()
+        except ObjectDoesNotExist:
+            return Response(
+                data={"error": "account doesn't exist!"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except MissingMailConfirmation as e:
+            return Response(data={"error": e.detail}, status=e.status_code)
         except ValidationError as e:
-            return Response(data={"error": str(e)}, status=e.status_code)
+            return Response(data={"error": e.detail}, status=e.status_code)
         except Exception as e:
             return Response(
                 data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
