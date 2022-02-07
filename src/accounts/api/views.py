@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from knox.views import LoginView as KnoxLoginView
 from knox.models import AuthToken
 from rest_framework import status
@@ -11,6 +13,7 @@ from ..models import Account
 from ..exceptions import MissingMailConfirmation
 from .serializers import (
     UpdateAccountSerializer,
+    VerifyAccountSerializer,
     RegisterAccountSerializer,
     UpdateCharactersSerializer,
     PublicAccountDataSerializer,
@@ -169,3 +172,53 @@ class UpdateCharactersView(GenericAPIView):
             )
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RequestVerificationTokenView(GenericAPIView):
+    def get(self, *args, **kwargs):
+        verification_token = uuid4()
+        try:
+            account = Account.objects.get(pk=self.request.user.pk)
+            if self.request.user != account:
+                raise PermissionDenied
+        except ObjectDoesNotExist:
+            return Response(
+                {"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND
+            )
+        except PermissionDenied:
+            return Response(
+                {"error": "You have no permission to do this action."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        account.verification_token = verification_token
+        account.save()
+        return Response(
+            {
+                "account_identifier": account.account_identifier,
+                "verification_token": verification_token,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class VerifyAccountView(GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = VerifyAccountSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            return Response(data={"error": str(e)}, status=e.status_code)
+        except Exception as e:
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        account = Account.objects.get(
+            account_identifier=serializer.data["account_identifier"]
+        )
+        public_data = PublicAccountDataSerializer(account).data
+
+        return Response(public_data, status=status.HTTP_200_OK)

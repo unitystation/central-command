@@ -9,7 +9,14 @@ from ..models import Account
 class PublicAccountDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ("account_identifier", "username", "is_verified", "characters_data")
+        fields = (
+            "account_identifier",
+            "username",
+            "legacy_id",
+            "is_verified",
+            "is_authorized_server",
+            "characters_data",
+        )
 
 
 class RegisterAccountSerializer(serializers.ModelSerializer):
@@ -75,3 +82,20 @@ class UpdateCharactersSerializer(serializers.ModelSerializer):
         )
         instance.save()
         return instance
+
+
+class VerifyAccountSerializer(serializers.Serializer):
+    account_identifier = serializers.CharField()
+    verification_token = serializers.UUIDField()
+
+    def validate(self, data):
+        account = Account.objects.get(account_identifier=data["account_identifier"])
+
+        data_token = data["verification_token"]
+        account_token = account.verification_token
+
+        if account_token != data_token:
+            raise serializers.ValidationError(
+                "Verification token seems invalid or maybe outdated. Try requesting a new one."
+            )
+        return account

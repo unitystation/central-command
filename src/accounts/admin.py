@@ -19,7 +19,12 @@ class AccountAdminView(admin.ModelAdmin):
             "Account basic data",
             {
                 "classes": ("wide",),
-                "fields": ("email", "account_identifier", "username"),
+                "fields": (
+                    "email",
+                    "account_identifier",
+                    "username",
+                    "verification_token",
+                ),
             },
         ),
         ("Characters", {"classes": ("wide",), "fields": ("characters_data",)}),
