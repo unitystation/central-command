@@ -1,53 +1,26 @@
 from django.db import models
 
-from account.models import Account
 
-from .utils import generate_isbn
+class Other(models.Model):
+    account = models.OneToOneField(
+        "accounts.Account", on_delete=models.CASCADE, primary_key=True
+    )
+    """To what account/server is this extra unordered persistent data related to?"""
+
+    other_data = models.JSONField(default=dict)
+    """The extra unordered persistent data."""
+
+    def __str__(self):
+        return f"{self.account.pk}'s other data"
 
 
 class PolyPhrase(models.Model):
-    said_by = models.ForeignKey(
-        Account,
-        verbose_name="said by",
-        on_delete=models.DO_NOTHING,
-        null=True,
-    )
-    phrase = models.CharField(verbose_name="phrase", max_length=150)
+    said_by = models.CharField(max_length=28, blank=True, default="Who knows?")
+    """What account identifier said this phrase originally? Can be blank"""
+
+    phrase = models.CharField(max_length=128)
 
     def __str__(self):
-        return f"phrase number {self.id}"
-
-
-class BookCategory(models.Model):
-    cat_id = models.AutoField(primary_key=True)
-    name = models.CharField(verbose_name="category name", max_length=50)
-    abbrev = models.CharField(verbose_name="abbreviation", max_length=3)
-    description = models.CharField(verbose_name="description", max_length=150)
-
-    def __str__(self):
-        return self.name
-
-
-class Book(models.Model):
-    isbn = models.CharField(verbose_name="isbn", max_length=13, unique=True)
-    title = models.CharField(verbose_name="title", max_length=30, blank=False)
-    categories = models.ManyToManyField(BookCategory)
-
-    def __str__(self):
-        return f"{self.isbn} - {self.title}"
-
-    def get_pages(self):
-        return self.bookpage_set.all().order_by("page_id")
-
-    def save(self, *args, **kwargs):
-        self.isbn = generate_isbn()
-        super().save(*args, **kwargs)
-
-
-class BookPage(models.Model):
-    page_id = models.AutoField(primary_key=True)
-    content = models.TextField(verbose_name="page content", max_length=600, blank=True)
-    book = models.ForeignKey(Book, models.CASCADE, null=False)
-
-    def __str__(self):
-        return f"{self.page_id} page. from {self.book.title}"
+        if self.said_by:
+            return f"{self.said_by}: {self.phrase}"
+        return f"{self.pk}: {self.phrase}"

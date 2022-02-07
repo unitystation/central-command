@@ -1,15 +1,17 @@
 from django.urls import path
 
-from persistence.api.views import (
-    poly_phrase_by_id_view,
-    poly_store_phrase_view,
-    poly_random_phrase_view,
+from .views import (
+    ReadOtherDataView,
+    WriteOtherDataView,
+    WritePolyPhraseView,
+    RandomPolyPhraseView,
 )
 
 app_name = "persistence"
 
 urlpatterns = [
-    path("polysays/", poly_random_phrase_view, name="Poly says"),
-    path("polysays/<phrase_id>/", poly_phrase_by_id_view, name="Phrase by id"),
-    path("post/polyphrase", poly_store_phrase_view, name="Post poly phrase"),
+    path("other-data/read", ReadOtherDataView.as_view(), name="read"),
+    path("other-data/write", WriteOtherDataView.as_view(), name="write"),
+    path("poly-says", RandomPolyPhraseView.as_view(), name="poly-says"),
+    path("poly-hears", WritePolyPhraseView.as_view(), name="poly-hears"),
 ]
