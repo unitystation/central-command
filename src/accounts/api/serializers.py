@@ -9,7 +9,14 @@ from ..models import Account
 class PublicAccountDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ("account_identifier", "username", "is_verified", "characters_data")
+        fields = (
+            "account_identifier",
+            "username",
+            "legacy_id",
+            "is_verified",
+            "is_authorized_server",
+            "characters_data",
+        )
 
 
 class RegisterAccountSerializer(serializers.ModelSerializer):
@@ -51,9 +58,15 @@ class UpdateAccountSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
     def update(self, instance, validated_data):
+        old_email = instance.email
         instance.username = validated_data.get("username", instance.username)
         instance.email = validated_data.get("email", instance.email)
         instance.set_password(validated_data.get("password", instance.password))
+
+        if old_email != instance.email and settings.REQUIRE_EMAIL_CONFIRMATION:
+            instance.is_active = False
+            sendConfirm(instance)
+
         instance.save()
         return instance
 
@@ -69,3 +82,20 @@ class UpdateCharactersSerializer(serializers.ModelSerializer):
         )
         instance.save()
         return instance
+
+
+class VerifyAccountSerializer(serializers.Serializer):
+    account_identifier = serializers.CharField()
+    verification_token = serializers.UUIDField()
+
+    def validate(self, data):
+        account = Account.objects.get(account_identifier=data["account_identifier"])
+
+        data_token = data["verification_token"]
+        account_token = account.verification_token
+
+        if account_token != data_token:
+            raise serializers.ValidationError(
+                "Verification token seems invalid or maybe outdated. Try requesting a new one."
+            )
+        return account

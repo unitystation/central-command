@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -52,6 +54,12 @@ class Account(AbstractUser):
         default=False,
         verbose_name="Authorized server",
         help_text="Can this account broadcast the server state to the server list api? Can this account write to persistence layer?",
+    )
+
+    verification_token = models.UUIDField(
+        verbose_name="Verification token",
+        blank=True,
+        default=uuid4(),
     )
 
     USERNAME_FIELD = "email"
