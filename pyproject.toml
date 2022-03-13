@@ -21,8 +21,8 @@ description = "All-in-one backend application for Unitystation"
 authors = ["Andrés Riquelme <andresfranco.rs@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-Django = "^3.2.11"
+python = "^3.10"
+Django = "^3.2.12"
 djangorestframework = "^3.12.1"
 psycopg2-binary = "^2.8.6"
 django-email-verification = "^0.0.7"
