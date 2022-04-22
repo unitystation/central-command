@@ -7,6 +7,6 @@ services:
       POSTGRES_HOST_AUTH_METHOD: trust
 
   test:
-    image: unitystation/unitystation_auth
+    image: unitystation/central-command
     env_file: ./example.env
     command: test
