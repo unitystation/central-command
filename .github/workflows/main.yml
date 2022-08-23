@@ -1,69 +1,85 @@
 name: CI
 on:
-  pull_request:
-    branches:
-      - "*"
-  push:
-    branches:
-      - main
-      - develop
-    tags:
-      - "v*"
+    pull_request:
+        branches:
+            - "*"
+    push:
+        branches:
+            - main
+            - develop
+        tags:
+            - "v*"
 
 env:
-  IMAGE_NAME: unitystation/central-command
+    IMAGE_NAME: unitystation/central-command
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - uses: pre-commit/action@v3.0.0
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v3
+            -   uses: actions/setup-python@v4
+                with:
+                    python-version: '3.10'
+            -   uses: pre-commit/action@v3.0.0
 
-  test:
-    needs: [lint]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build Docker image
-        run: |
-          docker pull $IMAGE_NAME
-          docker build --pull --cache-from $IMAGE_NAME -t $IMAGE_NAME .
-      - name: Test
-        env:
-          COMPOSE_CMD: docker-compose -f test-compose.yml
-        run: |
-          $COMPOSE_CMD up -d db
-          sleep 5 # let db initialize
-          $COMPOSE_CMD run test migrate
-          $COMPOSE_CMD run test
+    unit_test:
+        needs: [ lint ]
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v3
+            -   uses: actions/setup-python@v4
+                with:
+                    python-version: '3.10'
+            -   name: Install dependencies
+                run: |
+                    pip install poetry
+                    poetry config virtualenvs.create false
+                    poetry install
+            -   name: Run tests
+                env:
+                    SECRET_KEY: secret
+                    DB_ENGINE: django.db.backends.sqlite3
+                run: |
+                    cd src
+                    python manage.py migrate
+                    python manage.py test
+                    
 
-  deploy:
-    needs: [test]
-    if: ${{ github.event_name == 'push' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build image
-        run: |
-          docker pull $IMAGE_NAME
-          docker build --pull --cache-from $IMAGE_NAME -t $IMAGE_NAME:latest .
+    build_docker:
+        needs: [ lint ]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            -   name: Build Docker image
+                run: |
+                    docker pull $IMAGE_NAME
+                    docker build --pull --cache-from $IMAGE_NAME -t $IMAGE_NAME .
 
-      - name: Log in into Docker Hub
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+    deploy:
+        needs: [ unit_test, build_docker ]
+        if: ${{ github.event_name == 'push' }}
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v3
+            - uses: actions/checkout@v2
+            -   name: Build image
+                run: |
+                    docker pull $IMAGE_NAME
+                    docker build --pull --cache-from $IMAGE_NAME -t $IMAGE_NAME:latest .
 
-      # Context:
-      # For some reason, commits from semantic-release bot do not trigger any actions.
-      # Build/push steps were copied into release workflow until we figure out a better way.
-      # - name: Add a release tag to image
-      #   if: contains(github.ref, 'refs/tags/')
-      #   run: |
-      #     docker tag $IMAGE_NAME $IMAGE_NAME:${GITHUB_REF#refs/tags/}
+            -   name: Log in into Docker Hub
+                run: |
+                    echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
-      - name: Push image to registry
-        run: |
-          docker push $IMAGE_NAME
+            # Context:
+            # For some reason, commits from semantic-release bot do not trigger any actions.
+            # Build/push steps were copied into release workflow until we figure out a better way.
+            # - name: Add a release tag to image
+            #   if: contains(github.ref, 'refs/tags/')
+            #   run: |
+            #     docker tag $IMAGE_NAME $IMAGE_NAME:${GITHUB_REF#refs/tags/}
+
+            -   name: Push image to registry
+                run: |
+                    docker push $IMAGE_NAME
