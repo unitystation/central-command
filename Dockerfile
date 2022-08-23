@@ -1,4 +1,4 @@
-FROM python:3.10.2-alpine3.15
+FROM python:3.10.6-alpine3.16
 
 # enables proper stdout flushing
 ENV PYTHONUNBUFFERED yes

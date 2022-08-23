@@ -1,8 +1,5 @@
 version: "3"
 
-//Note that the service isn't reachable from the outside, you need to expose it with 
-// tools like nginx or traefik. Nginx-Proxy-Manager is what we use.
-
 x-common-volumes: &common-volumes
   volumes:
     - static-volume:/home/website/statics
