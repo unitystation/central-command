@@ -1,5 +1,8 @@
 version: "3"
 
+//Note that the service isn't reachable from the outside, you need to expose it with 
+// tools like nginx or traefik. Nginx-Proxy-Manager is what we use.
+
 x-common-volumes: &common-volumes
   volumes:
     - static-volume:/home/website/statics
@@ -21,14 +24,6 @@ services:
     expose:
       - 8000
     command: gunicorn central-command.wsgi:application --bind 0.0.0.0:8000
-    <<: *common-volumes
-
-  nginx:
-    build: ./nginx
-    ports:
-      - 80:80
-    depends_on:
-      - web
     <<: *common-volumes
 
 volumes:
