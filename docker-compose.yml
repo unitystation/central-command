@@ -23,14 +23,6 @@ services:
     command: gunicorn central-command.wsgi:application --bind 0.0.0.0:8000
     <<: *common-volumes
 
-  nginx:
-    build: ./nginx
-    ports:
-      - 80:80
-    depends_on:
-      - web
-    <<: *common-volumes
-
 volumes:
   db-data:
   static-volume:
