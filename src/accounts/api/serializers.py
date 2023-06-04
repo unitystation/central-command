@@ -1,7 +1,7 @@
 from django.conf import settings
-from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django_email_verification import sendConfirm
+from rest_framework import serializers
 
 from ..models import Account
 
@@ -34,7 +34,6 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
 
 
 class LoginWithCredentialsSerializer(serializers.Serializer):
-
     email = serializers.EmailField()
     password = serializers.CharField(style={"input_type": "password"})
 
@@ -46,7 +45,8 @@ class LoginWithCredentialsSerializer(serializers.Serializer):
             )
         if not account.is_active:
             raise serializers.ValidationError(
-                "This account hasn't done the mail confirmation step or has been disabled."
+                "This account hasn't done the mail confirmation step "
+                "or has been disabled."
             )
         return account
 
@@ -96,6 +96,7 @@ class VerifyAccountSerializer(serializers.Serializer):
 
         if account_token != data_token:
             raise serializers.ValidationError(
-                "Verification token seems invalid or maybe outdated. Try requesting a new one."
+                "Verification token seems invalid or maybe outdated. "
+                "Try requesting a new one."
             )
         return account

@@ -1,23 +1,23 @@
 from uuid import uuid4
 
-from knox.views import LoginView as KnoxLoginView
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from knox.models import AuthToken
+from knox.views import LoginView as KnoxLoginView
 from rest_framework import status
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from rest_framework.generics import GenericAPIView, RetrieveAPIView
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
+from ..exceptions import MissingMailConfirmationError
 from ..models import Account
-from ..exceptions import MissingMailConfirmation
 from .serializers import (
-    UpdateAccountSerializer,
-    VerifyAccountSerializer,
-    RegisterAccountSerializer,
-    UpdateCharactersSerializer,
-    PublicAccountDataSerializer,
     LoginWithCredentialsSerializer,
+    PublicAccountDataSerializer,
+    RegisterAccountSerializer,
+    UpdateAccountSerializer,
+    UpdateCharactersSerializer,
+    VerifyAccountSerializer,
 )
 
 
@@ -33,8 +33,8 @@ class LoginWithTokenView(KnoxLoginView):
     def get_post_response_data(self, request, token, instance):
         try:
             if not request.user.is_active:
-                raise MissingMailConfirmation()
-        except MissingMailConfirmation as e:
+                raise MissingMailConfirmationError()
+        except MissingMailConfirmationError as e:
             return {"error": e.detail}
 
         serializer = self.get_user_serializer_class()
@@ -58,13 +58,13 @@ class LoginWithCredentialsView(GenericAPIView):
             serializer.is_valid(raise_exception=True)
             account = Account.objects.get(email=serializer.data["email"])
             if not account.is_active:
-                raise MissingMailConfirmation()
+                raise MissingMailConfirmationError()
         except ObjectDoesNotExist:
             return Response(
                 data={"error": "account doesn't exist!"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        except MissingMailConfirmation as e:
+        except MissingMailConfirmationError as e:
             return Response(data={"error": e.detail}, status=e.status_code)
         except ValidationError as e:
             return Response(data={"error": e.detail}, status=e.status_code)
