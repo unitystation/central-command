@@ -8,7 +8,15 @@ migrations
 [tool.ruff]
 exclude = ["migrations"]
 line-length = 121
-ignore = []
+ignore = [
+    # doesn't like Optional
+    # https://github.com/charliermarsh/ruff/issues/4858
+    "UP007",
+    # explicit raise from might be a bit too verbose, disable for now
+    "B904",
+    # asserts are useful in both tests and type checker persuasion
+    "S101",
+]
 select = [
     # pyflakes
     "F",
@@ -26,8 +34,7 @@ select = [
     # pyupgrade
     "UP",
     # flake8-bandit
-    # complains about assert inside tests/*
-    # "S",
+    "S",
     # flake8-comprehensions
     "C4",
     # flake8-logging-format
