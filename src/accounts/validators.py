@@ -8,8 +8,7 @@ class AccountNameValidator(ASCIIUsernameValidator):
     # and at least 3 characters
     regex = r"^[a-zA-Z0-9_\-]{3,}$"
     message = (
-        "Enter a valid account identifier. This value may contain only English "
-        "letters, numbers, and -/_ characters."
+        "Enter a valid account identifier. This value may contain only English letters, numbers, and -/_ characters."
     )
 
 

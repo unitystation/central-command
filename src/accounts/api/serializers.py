@@ -40,13 +40,10 @@ class LoginWithCredentialsSerializer(serializers.Serializer):
     def validate(self, data):
         account = authenticate(username=data["email"], password=data["password"])
         if account is None:
-            raise serializers.ValidationError(
-                "Unable to login with provided credentials."
-            )
+            raise serializers.ValidationError("Unable to login with provided credentials.")
         if not account.is_active:
             raise serializers.ValidationError(
-                "This account hasn't done the mail confirmation step "
-                "or has been disabled."
+                "This account hasn't done the mail confirmation step or has been disabled."
             )
         return account
 
@@ -77,9 +74,7 @@ class UpdateCharactersSerializer(serializers.ModelSerializer):
         fields = ("characters_data",)
 
     def update(self, instance, validated_data):
-        instance.characters_data = validated_data.get(
-            "characters_data", instance.characters_data
-        )
+        instance.characters_data = validated_data.get("characters_data", instance.characters_data)
         instance.save()
         return instance
 
@@ -96,7 +91,6 @@ class VerifyAccountSerializer(serializers.Serializer):
 
         if account_token != data_token:
             raise serializers.ValidationError(
-                "Verification token seems invalid or maybe outdated. "
-                "Try requesting a new one."
+                "Verification token seems invalid or maybe outdated. Try requesting a new one."
             )
         return account

@@ -10,9 +10,7 @@ class Account(AbstractUser):
     email = models.EmailField(
         verbose_name="Email address",
         unique=True,
-        help_text=(
-            "Email address must be unique. It is used to login and confirm the account."
-        ),
+        help_text=("Email address must be unique. It is used to login and confirm the account."),
     )
 
     account_identifier = models.CharField(
@@ -40,9 +38,7 @@ class Account(AbstractUser):
     is_verified = models.BooleanField(
         default=False,
         verbose_name="Verified",
-        help_text=(
-            "Is this account verified to be who they claim to be? Are they famous?!"
-        ),
+        help_text=("Is this account verified to be who they claim to be? Are they famous?!"),
     )
 
     legacy_id = models.CharField(
@@ -59,10 +55,7 @@ class Account(AbstractUser):
     characters_data = models.JSONField(
         verbose_name="Characters data",
         default=dict,
-        help_text=(
-            "Characters data is used to store all the characters associated with this "
-            "account."
-        ),
+        help_text=("Characters data is used to store all the characters associated with this account."),
     )
 
     is_authorized_server = models.BooleanField(

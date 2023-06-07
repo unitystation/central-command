@@ -69,16 +69,12 @@ class LoginWithCredentialsView(GenericAPIView):
         except ValidationError as e:
             return Response(data={"error": e.detail}, status=e.status_code)
         except Exception as e:
-            return Response(
-                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         account = serializer.validated_data
 
         return Response(
             {
-                "account": PublicAccountDataSerializer(
-                    account, context=self.get_serializer_context()
-                ).data,
+                "account": PublicAccountDataSerializer(account, context=self.get_serializer_context()).data,
                 "token": AuthToken.objects.create(account)[1],
             },
             status=status.HTTP_200_OK,
@@ -96,16 +92,12 @@ class RegisterAccountView(GenericAPIView):
         except ValidationError as e:
             return Response(data={"error": str(e)}, status=e.status_code)
         except Exception as e:
-            return Response(
-                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         account = serializer.save()
 
         return Response(
             {
-                "account": RegisterAccountSerializer(
-                    account, context=self.get_serializer_context()
-                ).data,
+                "account": RegisterAccountSerializer(account, context=self.get_serializer_context()).data,
                 "token": AuthToken.objects.create(account)[1],
             },
             status=status.HTTP_200_OK,
@@ -121,9 +113,7 @@ class UpdateAccountView(GenericAPIView):
             if request.user != account:
                 raise PermissionDenied
         except ObjectDoesNotExist:
-            return Response(
-                {"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND)
         except PermissionDenied:
             return Response(
                 {"error": "You have no permission to do this action."},
@@ -136,9 +126,7 @@ class UpdateAccountView(GenericAPIView):
         except ValidationError as e:
             return Response(data={"error": str(e)}, status=e.status_code)
         except Exception as e:
-            return Response(
-                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -152,9 +140,7 @@ class UpdateCharactersView(GenericAPIView):
             if request.user != account:
                 raise PermissionDenied
         except ObjectDoesNotExist:
-            return Response(
-                {"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND)
         except PermissionDenied:
             return Response(
                 {"error": "You have no permission to do this action."},
@@ -167,9 +153,7 @@ class UpdateCharactersView(GenericAPIView):
         except ValidationError as e:
             return Response(data={"error": str(e)}, status=e.status_code)
         except Exception as e:
-            return Response(
-                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -182,9 +166,7 @@ class RequestVerificationTokenView(GenericAPIView):
             if self.request.user != account:
                 raise PermissionDenied
         except ObjectDoesNotExist:
-            return Response(
-                {"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND)
         except PermissionDenied:
             return Response(
                 {"error": "You have no permission to do this action."},
@@ -212,13 +194,9 @@ class VerifyAccountView(GenericAPIView):
         except ValidationError as e:
             return Response(data={"error": str(e)}, status=e.status_code)
         except Exception as e:
-            return Response(
-                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        account = Account.objects.get(
-            account_identifier=serializer.data["account_identifier"]
-        )
+        account = Account.objects.get(account_identifier=serializer.data["account_identifier"])
         public_data = PublicAccountDataSerializer(account).data
 
         return Response(public_data, status=status.HTTP_200_OK)
