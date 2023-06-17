@@ -1,15 +1,15 @@
-from knox import views as knox_views
 from django.urls import path
+from knox import views as knox_views
 
 from .views import (
-    UpdateAccountView,
-    VerifyAccountView,
-    LoginWithTokenView,
-    RegisterAccountView,
-    UpdateCharactersView,
-    PublicAccountDataView,
     LoginWithCredentialsView,
+    LoginWithTokenView,
+    PublicAccountDataView,
+    RegisterAccountView,
     RequestVerificationTokenView,
+    UpdateAccountView,
+    UpdateCharactersView,
+    VerifyAccountView,
 )
 
 app_name = "account"

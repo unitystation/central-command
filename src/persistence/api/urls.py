@@ -1,10 +1,10 @@
 from django.urls import path
 
 from .views import (
+    RandomPolyPhraseView,
     ReadOtherDataView,
     WriteOtherDataView,
     WritePolyPhraseView,
-    RandomPolyPhraseView,
 )
 
 app_name = "persistence"

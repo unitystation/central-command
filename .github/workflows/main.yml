@@ -44,7 +44,7 @@ jobs:
                     cd src
                     python manage.py migrate
                     python manage.py test
-                    
+
 
     build_docker:
         needs: [ lint ]

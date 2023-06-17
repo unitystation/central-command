@@ -1,23 +1,23 @@
 from uuid import uuid4
 
-from knox.views import LoginView as KnoxLoginView
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from knox.models import AuthToken
+from knox.views import LoginView as KnoxLoginView
 from rest_framework import status
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from rest_framework.generics import GenericAPIView, RetrieveAPIView
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
+from ..exceptions import MissingMailConfirmationError
 from ..models import Account
-from ..exceptions import MissingMailConfirmation
 from .serializers import (
-    UpdateAccountSerializer,
-    VerifyAccountSerializer,
-    RegisterAccountSerializer,
-    UpdateCharactersSerializer,
-    PublicAccountDataSerializer,
     LoginWithCredentialsSerializer,
+    PublicAccountDataSerializer,
+    RegisterAccountSerializer,
+    UpdateAccountSerializer,
+    UpdateCharactersSerializer,
+    VerifyAccountSerializer,
 )
 
 
@@ -33,8 +33,8 @@ class LoginWithTokenView(KnoxLoginView):
     def get_post_response_data(self, request, token, instance):
         try:
             if not request.user.is_active:
-                raise MissingMailConfirmation()
-        except MissingMailConfirmation as e:
+                raise MissingMailConfirmationError()
+        except MissingMailConfirmationError as e:
             return {"error": e.detail}
 
         serializer = self.get_user_serializer_class()
@@ -58,27 +58,23 @@ class LoginWithCredentialsView(GenericAPIView):
             serializer.is_valid(raise_exception=True)
             account = Account.objects.get(email=serializer.data["email"])
             if not account.is_active:
-                raise MissingMailConfirmation()
+                raise MissingMailConfirmationError()
         except ObjectDoesNotExist:
             return Response(
                 data={"error": "account doesn't exist!"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        except MissingMailConfirmation as e:
+        except MissingMailConfirmationError as e:
             return Response(data={"error": e.detail}, status=e.status_code)
         except ValidationError as e:
             return Response(data={"error": e.detail}, status=e.status_code)
         except Exception as e:
-            return Response(
-                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         account = serializer.validated_data
 
         return Response(
             {
-                "account": PublicAccountDataSerializer(
-                    account, context=self.get_serializer_context()
-                ).data,
+                "account": PublicAccountDataSerializer(account, context=self.get_serializer_context()).data,
                 "token": AuthToken.objects.create(account)[1],
             },
             status=status.HTTP_200_OK,
@@ -96,16 +92,12 @@ class RegisterAccountView(GenericAPIView):
         except ValidationError as e:
             return Response(data={"error": str(e)}, status=e.status_code)
         except Exception as e:
-            return Response(
-                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         account = serializer.save()
 
         return Response(
             {
-                "account": RegisterAccountSerializer(
-                    account, context=self.get_serializer_context()
-                ).data,
+                "account": RegisterAccountSerializer(account, context=self.get_serializer_context()).data,
                 "token": AuthToken.objects.create(account)[1],
             },
             status=status.HTTP_200_OK,
@@ -121,9 +113,7 @@ class UpdateAccountView(GenericAPIView):
             if request.user != account:
                 raise PermissionDenied
         except ObjectDoesNotExist:
-            return Response(
-                {"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND)
         except PermissionDenied:
             return Response(
                 {"error": "You have no permission to do this action."},
@@ -136,9 +126,7 @@ class UpdateAccountView(GenericAPIView):
         except ValidationError as e:
             return Response(data={"error": str(e)}, status=e.status_code)
         except Exception as e:
-            return Response(
-                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -152,9 +140,7 @@ class UpdateCharactersView(GenericAPIView):
             if request.user != account:
                 raise PermissionDenied
         except ObjectDoesNotExist:
-            return Response(
-                {"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND)
         except PermissionDenied:
             return Response(
                 {"error": "You have no permission to do this action."},
@@ -167,9 +153,7 @@ class UpdateCharactersView(GenericAPIView):
         except ValidationError as e:
             return Response(data={"error": str(e)}, status=e.status_code)
         except Exception as e:
-            return Response(
-                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -182,9 +166,7 @@ class RequestVerificationTokenView(GenericAPIView):
             if self.request.user != account:
                 raise PermissionDenied
         except ObjectDoesNotExist:
-            return Response(
-                {"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND)
         except PermissionDenied:
             return Response(
                 {"error": "You have no permission to do this action."},
@@ -212,13 +194,9 @@ class VerifyAccountView(GenericAPIView):
         except ValidationError as e:
             return Response(data={"error": str(e)}, status=e.status_code)
         except Exception as e:
-            return Response(
-                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        account = Account.objects.get(
-            account_identifier=serializer.data["account_identifier"]
-        )
+        account = Account.objects.get(account_identifier=serializer.data["account_identifier"])
         public_data = PublicAccountDataSerializer(account).data
 
         return Response(public_data, status=status.HTTP_200_OK)

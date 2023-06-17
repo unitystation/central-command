@@ -2,9 +2,7 @@ from django.db import models
 
 
 class Other(models.Model):
-    account = models.OneToOneField(
-        "accounts.Account", on_delete=models.CASCADE, primary_key=True
-    )
+    account = models.OneToOneField("accounts.Account", on_delete=models.CASCADE, primary_key=True)
     """To what account/server is this extra unordered persistent data related to?"""
 
     other_data = models.JSONField(default=dict)

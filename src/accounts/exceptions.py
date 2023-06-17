@@ -1,7 +1,7 @@
 from rest_framework import status
 
 
-class MissingMailConfirmation(Exception):
+class MissingMailConfirmationError(Exception):
     """Account is trying to login without confirming their email first"""
 
     detail = "You must confirm your email before attempting to login."

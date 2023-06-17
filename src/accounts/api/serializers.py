@@ -1,7 +1,7 @@
 from django.conf import settings
-from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django_email_verification import sendConfirm
+from rest_framework import serializers
 
 from ..models import Account
 
@@ -34,16 +34,13 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
 
 
 class LoginWithCredentialsSerializer(serializers.Serializer):
-
     email = serializers.EmailField()
     password = serializers.CharField(style={"input_type": "password"})
 
     def validate(self, data):
         account = authenticate(username=data["email"], password=data["password"])
         if account is None:
-            raise serializers.ValidationError(
-                "Unable to login with provided credentials."
-            )
+            raise serializers.ValidationError("Unable to login with provided credentials.")
         if not account.is_active:
             raise serializers.ValidationError(
                 "This account hasn't done the mail confirmation step or has been disabled."
@@ -77,9 +74,7 @@ class UpdateCharactersSerializer(serializers.ModelSerializer):
         fields = ("characters_data",)
 
     def update(self, instance, validated_data):
-        instance.characters_data = validated_data.get(
-            "characters_data", instance.characters_data
-        )
+        instance.characters_data = validated_data.get("characters_data", instance.characters_data)
         instance.save()
         return instance
 
