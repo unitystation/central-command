@@ -9,8 +9,6 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
-from ..exceptions import MissingMailConfirmationError
-from ..models import Account
 from .serializers import (
     LoginWithCredentialsSerializer,
     PublicAccountDataSerializer,
@@ -19,6 +17,8 @@ from .serializers import (
     UpdateCharactersSerializer,
     VerifyAccountSerializer,
 )
+from ..exceptions import MissingMailConfirmationError
+from ..models import Account
 
 
 class PublicAccountDataView(RetrieveAPIView):
@@ -29,6 +29,15 @@ class PublicAccountDataView(RetrieveAPIView):
 
 class LoginWithTokenView(KnoxLoginView):
     permission_classes = (AllowAny,)
+
+    def post(self, request, format=None):
+        if request.auth is None:
+            return Response(
+                {"detail": "Invalid token."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        return super().post(request, format=None)
 
     def get_post_response_data(self, request, token, instance):
         try:
