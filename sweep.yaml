@@ -9,6 +9,8 @@ rules:
   - "Limit line length to 121 characters."
   - "Enable bandit for security checks and add necessary ignores."
   - "Avoid using debug logs or print statements in production code."
+  - "Make all commits following conventional commits format."
+  - "All PR titles should also follow conventional commits format."
 
 # This is the branch that Sweep will develop from and make pull requests to. Most people use 'main' or 'master' but some users also use 'dev' or 'staging'.
 branch: 'main'
