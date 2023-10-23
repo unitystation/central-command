@@ -11,6 +11,16 @@ from ..api.serializers import (
     VerifyAccountSerializer,
 )
 from ..models import Account
+from ..api.views import (
+    PublicAccountDataView,
+    LoginWithTokenView,
+    LoginWithCredentialsView,
+    RegisterAccountView,
+    UpdateAccountView,
+    UpdateCharactersView,
+    RequestVerificationTokenView,
+    VerifyAccountView,
+)
 
 faker = Faker()
 
@@ -134,22 +144,81 @@ class UpdateCharactersSerializerTest(TestCase):
         self.assertEqual(account.characters_data, {"character1": "data1"})
 
 
-class VerifyAccountSerializerTest(TestCase):
-    def test_verify_account(self):
-        account = Account.objects.create_user(
+# Add test case classes for each view here
+class PublicAccountDataViewTest(TestCase):
+    def setUp(self):
+        self.account = Account.objects.create(
             email="test@test.com",
             account_identifier="test_account",
             username="test_user",
             password=faker.password(),
         )
-        serializer = VerifyAccountSerializer(
-            data={
-                "account_identifier": "test_account",
-                "verification_token": account.verification_token,
-            }
-        )
-        serializer.is_valid(raise_exception=True)
-        account = serializer.validated_data
-        self.assertEqual(account.email, "test@test.com")
-        self.assertEqual(account.account_identifier, "test_account")
-        self.assertEqual(account.username, "test_user")
+
+    def test_get(self):
+        response = self.client.get(reverse('public_account_data', kwargs={'pk': self.account.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, PublicAccountDataSerializer(self.account).data)
+
+class LoginWithTokenViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test', password='test')
+        self.token = AuthToken.objects.create(self.user)[1]
+
+    def test_post(self):
+        response = self.client.post(reverse('login_with_token'), {'token': self.token})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['user'], PublicAccountDataSerializer(self.user).data)
+
+class LoginWithCredentialsViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test', password='test')
+
+    def test_post(self):
+        response = self.client.post(reverse('login_with_credentials'), {'username': 'test', 'password': 'test'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['user'], PublicAccountDataSerializer(self.user).data)
+
+class RegisterAccountViewTest(TestCase):
+    def test_post(self):
+        response = self.client.post(reverse('register_account'), {'username': 'test', 'password': 'test', 'email': 'test@test.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['user']['username'], 'test')
+
+class UpdateAccountViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test', password='test')
+
+    def test_post(self):
+        self.client.login(username='test', password='test')
+        response = self.client.post(reverse('update_account'), {'username': 'new_test'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['username'], 'new_test')
+
+class UpdateCharactersViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test', password='test')
+
+    def test_post(self):
+        self.client.login(username='test', password='test')
+        response = self.client.post(reverse('update_characters'), {'characters_data': {'character1': 'data1'}})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['characters_data'], {'character1': 'data1'})
+
+class RequestVerificationTokenViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test', password='test')
+
+    def test_get(self):
+        self.client.login(username='test', password='test')
+        response = self.client.get(reverse('request_verification_token'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['account_identifier'], self.user.account_identifier)
+
+class VerifyAccountViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test', password='test')
+
+    def test_post(self):
+        response = self.client.post(reverse('verify_account'), {'account_identifier': self.user.account_identifier})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, PublicAccountDataSerializer(self.user).data)
