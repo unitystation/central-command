@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 from ..models import Other, PolyPhrase
-from ..api.views import ReadOtherDataView, WriteOtherDataView
+from ..api.views import 
 
 class OtherModelTestCase(TestCase):
     """Test case for the Other model."""
