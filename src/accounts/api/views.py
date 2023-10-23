@@ -9,6 +9,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
+from ..exceptions import MissingMailConfirmationError
+from ..models import Account
 from .serializers import (
     LoginWithCredentialsSerializer,
     PublicAccountDataSerializer,
@@ -17,8 +19,6 @@ from .serializers import (
     UpdateCharactersSerializer,
     VerifyAccountSerializer,
 )
-from ..exceptions import MissingMailConfirmationError
-from ..models import Account
 
 
 class PublicAccountDataView(RetrieveAPIView):
