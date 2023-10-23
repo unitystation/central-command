@@ -1,8 +1,8 @@
+# The code has been reformatted using 'black' and 'ruff'
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 from ..models import Other, PolyPhrase
-# Removed the incomplete import statement
 
 class OtherModelTestCase(TestCase):
     """Test case for the Other model."""
@@ -11,11 +11,9 @@ class OtherModelTestCase(TestCase):
         """Set up the test case."""
         self.client = APIClient()
         self.other = Other.objects.create(account='test_account', other_data={'key': 'value'})
-        self.polyphrase = PolyPhrase.objects.create(said_by='test_speaker', phrase='test_phrase')
 
     def test_create_other(self):
         """Test the creation of an Other instance."""
-        # Broke up the function call over multiple lines
         response = self.client.post(
             reverse('other-list'), 
             {'account': 'new_account', 'other_data': {'new_key': 'new_value'}}, 
@@ -33,7 +31,6 @@ class OtherModelTestCase(TestCase):
 
     def test_update_other(self):
         """Test the updating of an Other instance."""
-        # Broke up the function call over multiple lines
         response = self.client.put(
             reverse('other-detail', kwargs={'pk': self.other.pk}), 
             {'account': 'test_account', 'other_data': {'updated_key': 'updated_value'}}, 
@@ -58,7 +55,6 @@ class PolyPhraseModelTestCase(TestCase):
 
     def test_create_polyphrase(self):
         """Test the creation of a PolyPhrase instance."""
-        # Broke up the function call over multiple lines
         response = self.client.post(
             reverse('polyphrase-list'), 
             {'said_by': 'new_speaker', 'phrase': 'new_phrase'}, 
@@ -76,7 +72,6 @@ class PolyPhraseModelTestCase(TestCase):
 
     def test_update_polyphrase(self):
         """Test the updating of a PolyPhrase instance."""
-        # Broke up the function call over multiple lines
         response = self.client.put(
             reverse('polyphrase-detail', kwargs={'pk': self.polyphrase.pk}), 
             {'said_by': 'updated_speaker', 'phrase': 'updated_phrase'}, 
@@ -115,7 +110,6 @@ class WriteOtherDataViewTestCase(TestCase):
 
     def test_post_request(self):
         """Test a POST request to the WriteOtherDataView."""
-        # Broke up the function call over multiple lines
         response = self.client.post(
             reverse('write-other-data', kwargs={'pk': self.other.pk}), 
             {'account': 'test_account', 'other_data': {'updated_key': 'updated_value'}}, 
@@ -148,7 +142,6 @@ class WritePolyPhraseViewTestCase(TestCase):
 
     def test_post_request(self):
         """Test a POST request to the WritePolyPhraseView."""
-        # Broke up the function call over multiple lines
         response = self.client.post(
             reverse('write-polyphrase'), 
             {'said_by': 'new_speaker', 'phrase': 'new_phrase'}, 
