@@ -8,7 +8,7 @@ rules:
   - "Use snake_case for variable and function names."
   - "Limit line length to 121 characters."
   - "Enable bandit for security checks and add necessary ignores."
-  - "Avoid using debug logs or print statements in production code."
+  - "Avoid using debug logs or print statements in production code. Check for 'print(' or 'console.log(' in the code."
 
 # This is the branch that Sweep will develop from and make pull requests to. Most people use 'main' or 'master' but some users also use 'dev' or 'staging'.
 branch: 'main'
