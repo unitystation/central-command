@@ -1,0 +1,22 @@
+meta {
+  name: success
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/accounts/login-token
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Token 6dc6178ad72f5bed0581b6b49024cdbb41d85ffdd1fbbf40991cce24a69a327b
+}
+
+body:json {
+  {
+    "username": "admin@admin.com",
+    "password": "admin"
+  }
+}

@@ -1,0 +1,20 @@
+meta {
+  name: Valid
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/accounts/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "account_identifier": "myname",
+    "username": "My Name",
+    "password": "qweasd123",
+    "email": "myname@email.com"
+  }
+}

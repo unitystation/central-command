@@ -1,0 +1,18 @@
+meta {
+  name: missing token
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/accounts/login-token
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "admin@admin.com",
+    "password": "admin"
+  }
+}
