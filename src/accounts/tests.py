@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import reverse
 from faker import Faker
+from knox.models import AuthToken
 
 from ..api.serializers import (
     LoginWithCredentialsSerializer,
@@ -11,9 +13,6 @@ from ..api.serializers import (
     VerifyAccountSerializer,
 )
 from ..models import Account
-from django.urls import reverse
-from knox.models import AuthToken
-)
 
 faker = Faker()
 
@@ -139,8 +138,12 @@ class UpdateCharactersSerializerTest(TestCase):
 
 # Add test case classes for each view here
 class PublicAccountDataViewTest(TestCase):
-    def setUp(self):
-        self.account = Account.objects.create(
+    """Test case for the PublicAccountDataView."""
+
+    @classmethod
+    def setUpTestData(cls):
+        """Set up test data for the test case."""
+        cls.account = Account.objects.create(
             email="test@test.com",
             account_identifier="test_account",
             username="test_user",
@@ -148,9 +151,10 @@ class PublicAccountDataViewTest(TestCase):
         )
 
     def test_get(self):
+        """Test the GET method of the view."""
         response = self.client.get(reverse('public_account_data', kwargs={'pk': self.account.pk}))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, PublicAccountDataSerializer(self.account).data)
+        self.assertDictEqual(response.json(), PublicAccountDataSerializer(self.account).data)
 
 class LoginWithTokenViewTest(TestCase):
     def setUp(self):
