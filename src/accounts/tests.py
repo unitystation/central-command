@@ -11,15 +11,8 @@ from ..api.serializers import (
     VerifyAccountSerializer,
 )
 from ..models import Account
-from ..api.views import (
-    PublicAccountDataView,
-    LoginWithTokenView,
-    LoginWithCredentialsView,
-    RegisterAccountView,
-    UpdateAccountView,
-    UpdateCharactersView,
-    RequestVerificationTokenView,
-    VerifyAccountView,
+from django.urls import reverse
+from knox.models import AuthToken
 )
 
 faker = Faker()
@@ -161,7 +154,14 @@ class PublicAccountDataViewTest(TestCase):
 
 class LoginWithTokenViewTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='test', password='test')
+        self.user = User.objects.create_user(username='test', password=faker.password())
+        self.token = AuthToken.objects.create(self.user)[1]
+        self.user = User.objects.create_user(username='test', password=faker.password())
+        response = self.client.post(reverse('register_account'), {'username': 'test', 'password': faker.password(), 'email': 'test@test.com'})
+        self.user = User.objects.create_user(username='test', password=faker.password())
+        self.user = User.objects.create_user(username='test', password=faker.password())
+        self.user = User.objects.create_user(username='test', password=faker.password())
+        self.user = User.objects.create_user(username='test', password=faker.password())
         self.token = AuthToken.objects.create(self.user)[1]
 
     def test_post(self):
