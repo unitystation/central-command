@@ -9,16 +9,20 @@ from ..api.serializers import (
     UpdateCharactersSerializer,
     VerifyAccountSerializer,
 )
+from faker import Faker
+
+faker = Faker()
 
 User = get_user_model()
 
 class AccountModelTest(TestCase):
     def test_create_account(self):
+        password = faker.password()
         account = Account.objects.create(
             email="test@test.com",
             account_identifier="test_account",
             username="test_user",
-            password="test_password",
+            password=password,
         )
         self.assertEqual(account.email, "test@test.com")
         self.assertEqual(account.account_identifier, "test_account")
@@ -30,7 +34,7 @@ class PublicAccountDataSerializerTest(TestCase):
             email="test@test.com",
             account_identifier="test_account",
             username="test_user",
-            password="test_password",
+            password=faker.password(),
         )
         serializer = PublicAccountDataSerializer(account)
         self.assertEqual(serializer.data, {
@@ -48,7 +52,7 @@ class RegisterAccountSerializerTest(TestCase):
             "email": "test@test.com",
             "account_identifier": "test_account",
             "username": "test_user",
-            "password": "test_password",
+            "password": faker.password(),
         })
         serializer.is_valid(raise_exception=True)
         account = serializer.save()
@@ -58,15 +62,16 @@ class RegisterAccountSerializerTest(TestCase):
 
 class LoginWithCredentialsSerializerTest(TestCase):
     def test_authenticate_account(self):
+        password = faker.password()
         Account.objects.create_user(
             email="test@test.com",
             account_identifier="test_account",
             username="test_user",
-            password="test_password",
+            password=password,
         )
         serializer = LoginWithCredentialsSerializer(data={
             "email": "test@test.com",
-            "password": "test_password",
+            "password": password,
         })
         serializer.is_valid(raise_exception=True)
         account = serializer.validated_data
@@ -76,16 +81,17 @@ class LoginWithCredentialsSerializerTest(TestCase):
 
 class UpdateAccountSerializerTest(TestCase):
     def test_update_account(self):
+        password = faker.password()
         account = Account.objects.create_user(
             email="test@test.com",
             account_identifier="test_account",
             username="test_user",
-            password="test_password",
+            password=password,
         )
         serializer = UpdateAccountSerializer(account, data={
             "username": "new_user",
             "email": "new@test.com",
-            "password": "new_password",
+            "password": faker.password(),
         })
         serializer.is_valid(raise_exception=True)
         account = serializer.save()
@@ -98,7 +104,7 @@ class UpdateCharactersSerializerTest(TestCase):
             email="test@test.com",
             account_identifier="test_account",
             username="test_user",
-            password="test_password",
+            password=faker.password(),
         )
         serializer = UpdateCharactersSerializer(account, data={
             "characters_data": {"character1": "data1"},
@@ -113,7 +119,7 @@ class VerifyAccountSerializerTest(TestCase):
             email="test@test.com",
             account_identifier="test_account",
             username="test_user",
-            password="test_password",
+            password=faker.password(),
         )
         serializer = VerifyAccountSerializer(data={
             "account_identifier": "test_account",
