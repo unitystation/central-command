@@ -1,0 +1,18 @@
+meta {
+  name: not verified
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/accounts/login-credentials
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "myname@email.com",
+    "password": "qweasd123"
+  }
+}

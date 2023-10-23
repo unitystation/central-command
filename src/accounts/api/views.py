@@ -30,6 +30,15 @@ class PublicAccountDataView(RetrieveAPIView):
 class LoginWithTokenView(KnoxLoginView):
     permission_classes = (AllowAny,)
 
+    def post(self, request, format=None):
+        if request.auth is None:
+            return Response(
+                {"detail": "Invalid token."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        return super().post(request, format=None)
+
     def get_post_response_data(self, request, token, instance):
         try:
             if not request.user.is_active:

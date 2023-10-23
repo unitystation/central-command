@@ -1,0 +1,18 @@
+meta {
+  name: non existent account
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/accounts/login-credentials
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "doesnot@exists.com",
+    "password": "qweasd123"
+  }
+}
