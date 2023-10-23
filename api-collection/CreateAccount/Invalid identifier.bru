@@ -1,0 +1,20 @@
+meta {
+  name: Invalid identifier
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/accounts/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "account_identifier": "' 'DROP TABLE USERS;",
+    "username": "My Name",
+    "password": "qweasd123",
+    "email": "myname@email.com"
+  }
+}
