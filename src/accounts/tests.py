@@ -10,7 +10,6 @@ from ..api.serializers import (
     RegisterAccountSerializer,
     UpdateAccountSerializer,
     UpdateCharactersSerializer,
-    VerifyAccountSerializer,
 )
 from ..models import Account
 
@@ -175,10 +174,10 @@ class LoginWithTokenViewTest(TestCase):
 
 class LoginWithCredentialsViewTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='test', password='test')
+        self.user = User.objects.create_user(username='test', password=faker.password())
 
     def test_post(self):
-        response = self.client.post(reverse('login_with_credentials'), {'username': 'test', 'password': 'test'})
+        self.client.post(reverse('login_with_credentials'), {'username': 'test', 'password': faker.password()})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['user'], PublicAccountDataSerializer(self.user).data)
 
@@ -220,9 +219,36 @@ class RequestVerificationTokenViewTest(TestCase):
 
 class VerifyAccountViewTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='test', password='test')
+        self.user = User.objects.create_user(username='test', password=faker.password())
 
     def test_post(self):
-        response = self.client.post(reverse('verify_account'), {'account_identifier': self.user.account_identifier})
+        self.client.login(username='test', password=faker.password())
+        self.client.post(reverse('update_account'), {'username': 'new_test'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['username'], 'new_test')
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='test', password=faker.password())
+
+    def test_post(self):
+        self.client.login(username='test', password=faker.password())
+        self.client.post(reverse('update_characters'), {'characters_data': {'character1': 'data1'}})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['characters_data'], {'character1': 'data1'})
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='test', password=faker.password())
+
+    def test_get(self):
+        self.client.login(username='test', password=faker.password())
+        self.client.get(reverse('request_verification_token'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['account_identifier'], self.user.account_identifier)
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='test', password=faker.password())
+
+    def test_post(self):
+        self.client.post(reverse('verify_account'), {'account_identifier': self.user.account_identifier})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, PublicAccountDataSerializer(self.user).data)
