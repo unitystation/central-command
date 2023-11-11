@@ -7,12 +7,11 @@ from .models import Account
 class AccountAdminView(admin.ModelAdmin):
     list_display = (
         "email",
-        "account_identifier",
+        "is_active",
+        "unique_identifier",
         "username",
         "is_verified",
         "legacy_id",
-        "characters_data",
-        "is_authorized_server",
     )
     fieldsets = (
         (
@@ -21,18 +20,20 @@ class AccountAdminView(admin.ModelAdmin):
                 "classes": ("wide",),
                 "fields": (
                     "email",
-                    "account_identifier",
+                    "unique_identifier",
                     "username",
                     "verification_token",
                 ),
             },
         ),
-        ("Characters", {"classes": ("wide",), "fields": ("characters_data",)}),
         (
             "Authorization",
             {
                 "classes": ("wide",),
-                "fields": ("is_active", "is_verified", "is_authorized_server"),
+                "fields": (
+                    "is_active",
+                    "is_verified",
+                ),
             },
         ),
         ("Legacy", {"classes": ("wide",), "fields": ("legacy_id",)}),

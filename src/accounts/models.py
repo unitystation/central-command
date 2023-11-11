@@ -13,13 +13,13 @@ class Account(AbstractUser):
         help_text="Email address must be unique. It is used to login and confirm the account.",
     )
 
-    account_identifier = models.CharField(
-        verbose_name="Account identifier",
+    unique_identifier = models.CharField(
+        verbose_name="Unique identifier",
         max_length=28,
         primary_key=True,
         validators=[AccountNameValidator()],
         help_text=(
-            "Account identifier is used to identify your account. "
+            "Unique identifier is used to identify your account. "
             "This will be used for bans, job bans, etc and can't ever be changed"
         ),
     )
@@ -52,29 +52,20 @@ class Account(AbstractUser):
         ),
     )
 
-    characters_data = models.JSONField(
-        verbose_name="Characters data",
-        default=dict,
-        help_text="Characters data is used to store all the characters associated with this account.",
-    )
-
-    is_authorized_server = models.BooleanField(
-        default=False,
-        verbose_name="Authorized server",
-        help_text=(
-            "Can this account broadcast the server state to the server list api? "
-            "Can this account write to persistence layer?"
-        ),
-    )
-
     verification_token = models.UUIDField(
         verbose_name="Verification token",
         blank=True,
-        default=uuid4(),
+        null=True,
     )
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["account_identifier", "username"]
+    REQUIRED_FIELDS = ["unique_identifier", "username"]
+
+    def save(self, *args, **kwargs):
+        if self.verification_token is None:
+            self.verification_token = uuid4()
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.account_identifier} as {self.username}"
+        return f"{self.unique_identifier} as {self.username}"

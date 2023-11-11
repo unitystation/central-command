@@ -10,19 +10,17 @@ class PublicAccountDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = (
-            "account_identifier",
+            "unique_identifier",
             "username",
             "legacy_id",
             "is_verified",
-            "is_authorized_server",
-            "characters_data",
         )
 
 
 class RegisterAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ("account_identifier", "username", "password", "email")
+        fields = ("unique_identifier", "username", "password", "email")
         extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
@@ -68,23 +66,12 @@ class UpdateAccountSerializer(serializers.ModelSerializer):
         return instance
 
 
-class UpdateCharactersSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Account
-        fields = ("characters_data",)
-
-    def update(self, instance, validated_data):
-        instance.characters_data = validated_data.get("characters_data", instance.characters_data)
-        instance.save()
-        return instance
-
-
 class VerifyAccountSerializer(serializers.Serializer):
-    account_identifier = serializers.CharField()
+    unique_identifier = serializers.CharField()
     verification_token = serializers.UUIDField()
 
     def validate(self, data):
-        account = Account.objects.get(account_identifier=data["account_identifier"])
+        account = Account.objects.get(unique_identifier=data["unique_identifier"])
 
         data_token = data["verification_token"]
         account_token = account.verification_token
