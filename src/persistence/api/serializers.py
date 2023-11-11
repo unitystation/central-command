@@ -19,7 +19,7 @@ class CharacterSerializer(serializers.ModelSerializer):
             "data",
         )
 
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "last_updated")
 
 
 class UpdateCharacterSerializer(serializers.ModelSerializer):
@@ -33,7 +33,7 @@ class UpdateCharacterSerializer(serializers.ModelSerializer):
             "data",
         )
 
-        read_only_fields = ("id", "account")
+        read_only_fields = ("id", "account", "last_updated")
 
 
 class OtherSerializer(serializers.ModelSerializer):

@@ -26,6 +26,11 @@ class Character(models.Model):
     )
     """The character data."""
 
+    last_updated = models.DateTimeField(
+        auto_now=True,
+        help_text="When was this character last updated? Useful for conciliation with the local cache of a character.",
+    )
+
     def __str__(self):
         return f"{self.account.unique_identifier}'s character"
 
