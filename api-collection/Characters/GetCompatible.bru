@@ -1,0 +1,20 @@
+meta {
+  name: GetCompatible
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/persistence/characters/compatible?fork_compatibility=Unitystation&character_sheet_version=1.0.0
+  body: none
+  auth: none
+}
+
+query {
+  fork_compatibility: Unitystation
+  character_sheet_version: 1.0.0
+}
+
+headers {
+  Authorization: Token 4963885504960842e61c6cadb4a9df05647e2c7bf1cfe08ea8cff57ab37058ac
+}
