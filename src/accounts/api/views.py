@@ -16,7 +16,6 @@ from .serializers import (
     PublicAccountDataSerializer,
     RegisterAccountSerializer,
     UpdateAccountSerializer,
-    UpdateCharactersSerializer,
     VerifyAccountSerializer,
 )
 
@@ -140,33 +139,6 @@ class UpdateAccountView(GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class UpdateCharactersView(GenericAPIView):
-    serializer_class = UpdateCharactersSerializer
-
-    def post(self, request):
-        try:
-            account = Account.objects.get(pk=request.user.pk)
-            if request.user != account:
-                raise PermissionDenied
-        except ObjectDoesNotExist:
-            return Response({"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND)
-        except PermissionDenied:
-            return Response(
-                {"error": "You have no permission to do this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        serializer = self.get_serializer(account, data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            return Response(data={"error": str(e)}, status=e.status_code)
-        except Exception as e:
-            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 class RequestVerificationTokenView(GenericAPIView):
     def get(self, *args, **kwargs):
         verification_token = uuid4()
@@ -185,7 +157,7 @@ class RequestVerificationTokenView(GenericAPIView):
         account.save()
         return Response(
             {
-                "account_identifier": account.account_identifier,
+                "unique_identifier": account.unique_identifier,
                 "verification_token": verification_token,
             },
             status=status.HTTP_200_OK,
@@ -205,7 +177,7 @@ class VerifyAccountView(GenericAPIView):
         except Exception as e:
             return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        account = Account.objects.get(account_identifier=serializer.data["account_identifier"])
+        account = Account.objects.get(unique_identifier=serializer.data["unique_identifier"])
         public_data = PublicAccountDataSerializer(account).data
 
         return Response(public_data, status=status.HTTP_200_OK)

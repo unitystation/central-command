@@ -1,0 +1,27 @@
+meta {
+  name: Update
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/persistence/characters/8/update
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Token 4963885504960842e61c6cadb4a9df05647e2c7bf1cfe08ea8cff57ab37058ac
+}
+
+body:json {
+  {
+    "id": 20,
+    "account": "AnotherAccount",
+    "fork_compatibility": "Not compatible",
+    "data": {
+      "age": 31,
+      "name": "Another name"
+    }
+  }
+}
