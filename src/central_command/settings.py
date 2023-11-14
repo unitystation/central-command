@@ -125,7 +125,7 @@ EMAIL_FROM_ADDRESS = os.environ.get("EMAIL_HOST_USER")
 EMAIL_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_MAIL_SUBJECT = "Confirm your Unitystation account"
 EMAIL_MAIL_HTML = "registration/confirmation_email.html"
-EMAIL_PAGE_TEMPLATE = "confirm_template.html"
+email_page_template = "confirm_template.html"
 EMAIL_PAGE_DOMAIN = os.environ.get("EMAIL_PAGE_DOMAIN")
 
 # Password validation
