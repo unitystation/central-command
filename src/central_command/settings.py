@@ -68,7 +68,7 @@ ROOT_URLCONF = "central_command.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [Path(BASE_DIR, "website", "templates")],
+        "DIRS": [Path(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -125,7 +125,7 @@ EMAIL_FROM_ADDRESS = os.environ.get("EMAIL_HOST_USER")
 EMAIL_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_MAIL_SUBJECT = "Confirm your Unitystation account"
 EMAIL_MAIL_HTML = "registration/confirmation_email.html"
-EMAIL_PAGE_TEMPLATE = "registration/confirm_template.html"
+EMAIL_PAGE_TEMPLATE = "confirm_template.html"
 EMAIL_PAGE_DOMAIN = os.environ.get("EMAIL_PAGE_DOMAIN")
 
 # Password validation
