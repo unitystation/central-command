@@ -11,13 +11,7 @@ class CompatibleCharactersRequestSerializer(serializers.Serializer):
 class CharacterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Character
-        fields = (
-            "id",
-            "account",
-            "fork_compatibility",
-            "character_sheet_version",
-            "data",
-        )
+        fields = ("id", "account", "fork_compatibility", "character_sheet_version", "data", "last_updated")
 
         read_only_fields = ("id", "last_updated")
 
@@ -25,13 +19,7 @@ class CharacterSerializer(serializers.ModelSerializer):
 class UpdateCharacterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Character
-        fields = (
-            "id",
-            "account",
-            "fork_compatibility",
-            "character_sheet_version",
-            "data",
-        )
+        fields = ("id", "account", "fork_compatibility", "character_sheet_version", "data", "last_updated")
 
         read_only_fields = ("id", "account", "last_updated")
 
