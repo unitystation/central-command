@@ -79,7 +79,7 @@ class UpdateCharacterView(GenericAPIView):
     serializer_class = UpdateCharacterSerializer
     queryset = Character.objects.all()
 
-    def patch(self, request, pk):
+    def update_character(self, request, pk):
         try:
             character = Character.objects.get(pk=pk)
             if character.account != request.user:
@@ -98,6 +98,12 @@ class UpdateCharacterView(GenericAPIView):
             return Response(serializer.data)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):
+        return self.update_character(request, pk)
+
+    def put(self, request, pk):
+        return self.update_character(request, pk)
 
 
 class DeleteCharacterView(GenericAPIView):
