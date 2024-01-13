@@ -219,6 +219,6 @@ class RequestPasswordResetView(GenericAPIView):
             return Response(data={"error V": str(e)}, status=e.status_code)
         except Exception as e:
             return Response(data={"error E": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        serializer.create(serializer.validated_data)
+        serializer.save()
         #return Response(data={"sucess test" : "soup"}, status=status.HTTP_200_OK)
         return Response(data={"sucess" : str(serializer)}, status=status.HTTP_200_OK)
