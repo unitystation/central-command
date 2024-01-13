@@ -8,6 +8,14 @@ from rest_framework.generics import GenericAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_text
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth.views import PasswordResetConfirmView
+from django.contrib.auth.forms import SetPasswordForm
+from django.http import HttpResponse
 
 from ..exceptions import MissingMailConfirmationError
 from ..models import Account
@@ -17,6 +25,8 @@ from .serializers import (
     RegisterAccountSerializer,
     UpdateAccountSerializer,
     VerifyAccountSerializer,
+    ChangePasswordSerializer,
+    ChangePasswordRequestSerializer,
 )
 
 
@@ -181,3 +191,34 @@ class VerifyAccountView(GenericAPIView):
         public_data = PublicAccountDataSerializer(account).data
 
         return Response(public_data, status=status.HTTP_200_OK)
+
+class ChangePasswordView(GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ChangePasswordSerializer
+
+    def get(self, unique_identifier, token):
+        try:
+            account = Account.objects.get(unique_identifier)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({'detail': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if account is not None and default_token_generator.check_token(account, token):
+            return Response({'detail': 'Password reset successfully.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+class RequestPasswordResetView(GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ChangePasswordRequestSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            return Response(data={"error V": str(e)}, status=e.status_code)
+        except Exception as e:
+            return Response(data={"error E": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        serializer.create(serializer.validated_data)
+        #return Response(data={"sucess test" : "soup"}, status=status.HTTP_200_OK)
+        return Response(data={"sucess" : str(serializer)}, status=status.HTTP_200_OK)

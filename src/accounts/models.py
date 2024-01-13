@@ -69,3 +69,7 @@ class Account(AbstractUser):
 
     def __str__(self):
         return f"{self.unique_identifier} as {self.username}"
+
+class PasswordResetRequestModel(models.Model):
+    token = models.UUIDField()
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)

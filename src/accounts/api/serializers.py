@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from django_email_verification import sendConfirm
 from rest_framework import serializers
 
-from ..models import Account
+from ..models import (Account, PasswordResetRequestModel)
 
 
 class PublicAccountDataSerializer(serializers.ModelSerializer):
@@ -81,3 +81,35 @@ class VerifyAccountSerializer(serializers.Serializer):
                 "Verification token seems invalid or maybe outdated. Try requesting a new one."
             )
         return account
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ("password")
+        extra_kwargs = {"password": {"write_only": True}}
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data.get("password", instance.password))
+        instance.save()
+        return instance
+    
+
+class ChangePasswordRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PasswordResetRequestModel
+        fields = ["email"]
+
+    email = serializers.EmailField()
+
+    def validate(self, data):
+        account = Account.objects.filter(email=data["email"]).first()
+        #note: make this silently fail later, users dont need to know about this.
+        if account is None:
+            raise serializers.ValidationError("Account with this email doesn't exist.")
+        newModel = PasswordResetRequestModel(token=account.verification_token, account=account)
+        return newModel
+    
+    def create(self, validated_data):
+        print(validated_data)
+        reset_request = PasswordResetRequestModel.objects.create(token=validated_data.token, account=validated_data.account)
+        return reset_request
