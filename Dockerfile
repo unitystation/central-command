@@ -40,7 +40,7 @@ RUN : \
     && mkdir /home/website/media
 
 # removes \r from script and makes it executable.
-# both of these are cause by windows users touching file and not configuring git properly
+# both of these are caused by windows users touching file and not configuring git properly
 RUN : \
     && sed -i 's/\r//g' entrypoint.sh \
     && chmod +x entrypoint.sh
