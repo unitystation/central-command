@@ -49,6 +49,12 @@ Install poetry to manage dependencies and update pip
 pip install -U pip poetry
 ```
 
+Install dev dependencies
+
+```sh
+poetry install
+```
+
 #### pre-commit
 
 pre-commit is a git hook which runs every time you make a commit to catch linting and formatting errors early.  
