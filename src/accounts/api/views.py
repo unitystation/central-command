@@ -215,10 +215,10 @@ class RequestPasswordResetView(GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            return Response(data={"error V": str(e)}, status=e.status_code)
         except Exception as e:
-            return Response(data={"error E": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Don't tell the user about the error, just move on.
+            # Though maybe we can add a -dev flag check to report errors while not in a production environment?
+            return Response(data={"Operation Done": "Soup"}, status=status.HTTP_200_OK)
+        
         serializer.save()
-        #return Response(data={"sucess test" : "soup"}, status=status.HTTP_200_OK)
-        return Response(data={"sucess" : str(serializer)}, status=status.HTTP_200_OK)
+        return Response(data={"Operation done" : "Soup"}, status=status.HTTP_200_OK)
