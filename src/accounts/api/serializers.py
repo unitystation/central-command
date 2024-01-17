@@ -102,14 +102,18 @@ class ChangePasswordRequestSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
 
     def validate(self, data):
-        account = Account.objects.filter(email=data["email"]).first()
-        #note: make this silently fail later, users dont need to know about this.
+        email = data.get("email")
+        account = Account.objects.filter(email=email).first()  # Assuming you're using the User model
+        # Note: Make this silently fail later; users don't need to know about this.
         if account is None:
             raise serializers.ValidationError("Account with this email doesn't exist.")
-        newModel = PasswordResetRequestModel(token=account.verification_token, account=account)
-        return newModel
+
+        # Create a new instance of PasswordResetRequestModel using the account's verification token
+        token = account.verification_token  # Replace with the actual field name
+        new_model_data = {"token": token, "account": account}
+        return new_model_data
     
     def create(self, validated_data):
         print(validated_data)
-        reset_request = PasswordResetRequestModel.objects.create(token=validated_data.token, account=validated_data.account)
+        reset_request = PasswordResetRequestModel.objects.create(**validated_data)
         return reset_request
