@@ -15,6 +15,10 @@ The all-in-one backend application for [Unitystation](https://github.com/unityst
 
 ## Development guide
 
+### Settings file
+
+Copy `example.env` to `.env` and customize it.
+
 ### Setting up python
 
 You will need python 3.11+
