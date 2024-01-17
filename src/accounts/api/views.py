@@ -204,6 +204,7 @@ class ChangePasswordView(GenericAPIView):
                 account.set_password(serializer.validated_data["password"])
                 account.save()
                 reset_request.delete()
+                return Response(data={"Operation Done": "Changed password succesfully"}, status=status.HTTP_200_OK)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             return Response({'detail': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
         
