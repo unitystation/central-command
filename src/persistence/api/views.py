@@ -188,7 +188,7 @@ class WriteOtherDataView(GenericAPIView):
 
     def update_other_data_dict(self, new_data: dict, old_data: dict) -> dict:
         final_data = {"account": new_data["account"]}
-        for key, value in new_data.get("other_data").items():
+        for key, value in new_data["other_data"].items():
             old_data[key] = value
         final_data["other_data"] = old_data
         return final_data

@@ -1,48 +1,48 @@
-FROM python:3.10.6-alpine3.16
+FROM python:3.11-alpine3.19
 
-# enables proper stdout flushing
-ENV PYTHONUNBUFFERED yes
+# in order:
+# proper stdout flushing for alpine
 # no .pyc files
-ENV PYTHONDONTWRITEBYTECODE yes
-
-# pip optimizations
-ENV PIP_NO_CACHE_DIR yes
-ENV PIP_DISABLE_PIP_VERSION_CHECK yes
+# do not store pip cache
+# do not check pip version
+# do not yell about root user
+ENV \
+    PYTHONUNBUFFERED=yes \
+    PYTHONDONTWRITEBYTECODE=yes \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_ROOT_USER_ACTION=ignore
 
 WORKDIR /src
 
-COPY poetry.lock pyproject.toml ./
+COPY poetry.lock pyproject.toml .
 
-RUN apk add --no-cache libpq \
-    && apk add --no-cache --virtual .build-deps \
-    # https://cryptography.io/en/latest/installation/#alpine
-    gcc \
-    musl-dev \
-    python3-dev \
-    libffi-dev \
-    openssl-dev \
-    cargo \
-    postgresql-dev \
+RUN : \
+    # psycopg runtime dep
+    && apk add --no-cache libpq \
     && pip install poetry \
     && poetry config virtualenvs.create false \
-    && poetry install --no-dev \
-    && apk del --purge .build-deps
+    && poetry install --only main
 
 COPY src .
 
-RUN mkdir /home/website
-RUN mkdir /home/website/statics
-RUN mkdir /home/website/media
-
 # I'm too dumb to make user permissions over shared volumes work
-#RUN addgroup -S unitystation \
-#    && adduser -S central_command -G unitystation \
-#    && chown -R central_command:unitystation /src \
-#    && chown -R central_command:unitystation $home
+# RUN : \
+#     && addgroup -S unitystation \
+#     && adduser -S central_command -G unitystation \
+#     && chown -R central_command:unitystation /src
 #
-#USER central_command
+# USER central_command
 
-RUN sed -i 's/\r$//g' entrypoint.sh
-RUN chmod +x entrypoint.sh
+RUN : \
+    && mkdir /home/website \
+    && mkdir /home/website/statics \
+    && mkdir /home/website/media
+
+# removes \r from script and makes it executable.
+# both of these are cause by windows users touching file and not configuring git properly
+RUN : \
+    && sed -i 's/\r//g' entrypoint.sh \
+    && chmod +x entrypoint.sh
 
 ENTRYPOINT ["./entrypoint.sh"]

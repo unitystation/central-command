@@ -1,5 +1,5 @@
 [tool.black]
-target-version = ['py310']
+target-version = ['py311']
 line-length = 121
 force-exclude = '''
 migrations
@@ -16,6 +16,8 @@ ignore = [
     "B904",
     # asserts are useful in both tests and type checker persuasion
     "S101",
+    # it is annoying to annotate django Meta model properties as CalssVar for no reason
+    "RUF012",
 ]
 select = [
     # pyflakes
@@ -54,6 +56,21 @@ fixable = [
 combine-as-imports = true
 lines-between-types = 1
 
+# with 'mypy' and 'django-stubs[compatible-mypy]' installed
+# [tool.mypy]
+# plugins = ["mypy_django_plugin.main"]
+#
+# [tool.django-stubs]
+# django_settings_module = "central_command.settings"
+#
+# [[tool.mypy.overrides]]
+# module = [
+#     "django_email_verification.*",
+#     "rest_framework.*",
+#     "knox.*",
+# ]
+# ignore_missing_imports = true
+
 [tool.poetry]
 name = "central-command"
 version = "0.1.0"
@@ -61,7 +78,7 @@ description = "All-in-one backend application for Unitystation"
 authors = ["Andrés Riquelme <andresfranco.rs@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 Django = "^3.2.12"
 djangorestframework = "^3.12.1"
 psycopg2-binary = "2.9.9"
@@ -72,8 +89,8 @@ python-dotenv = "^0.19.2"
 whitenoise = "^6.2.0"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.3.2"
-ruff = "^0.0.270"
+pre-commit = "^3.6.0"
+ruff = "^0.1.13"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
