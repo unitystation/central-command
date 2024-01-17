@@ -6,8 +6,7 @@ FROM python:3.11-alpine3.19
 # do not store pip cache
 # do not check pip version
 # do not yell about root user
-ENV \
-    PYTHONUNBUFFERED=yes \
+ENV PYTHONUNBUFFERED=yes \
     PYTHONDONTWRITEBYTECODE=yes \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
