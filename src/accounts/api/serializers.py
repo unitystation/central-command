@@ -103,7 +103,7 @@ class ChangePasswordRequestSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         email = data.get("email")
-        account = Account.objects.filter(email=email).first()  # Assuming you're using the User model
+        account = Account.objects.filter(email=email).first()
         # Note: Make this silently fail later; users don't need to know about this.
         if account is None:
             raise serializers.ValidationError("Account with this email doesn't exist.")
