@@ -1,3 +1,4 @@
+import uuid
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django_email_verification import sendConfirm
@@ -109,7 +110,7 @@ class ChangePasswordRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Account with this email doesn't exist.")
 
         # Create a new instance of PasswordResetRequestModel using the account's verification token
-        token = account.verification_token  # Replace with the actual field name
+        token = uuid.uuid4()  # Replace with the actual field name
         new_model_data = {"token": token, "account": account}
         return new_model_data
     

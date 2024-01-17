@@ -194,7 +194,10 @@ class ChangePasswordView(GenericAPIView):
     def get(self, request, reset_token):
         print(str(reset_token))
         try:
-            account = PasswordResetRequestModel.objects.get(reset_token)
+            reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
+            print(str(reset_request))
+            print(str(reset_request.account))
+            account = PasswordResetRequestModel.objects.get(token=reset_token).account
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             return Response({'detail': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
 
