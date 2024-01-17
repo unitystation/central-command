@@ -88,11 +88,6 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         model = Account
         fields = ("password",)
         extra_kwargs = {"password": {"write_only": True}}
-
-    def update(self, instance, validated_data):
-        instance.set_password(validated_data.get("password", instance.password))
-        instance.save()
-        return instance
     
 
 class ChangePasswordRequestSerializer(serializers.ModelSerializer):

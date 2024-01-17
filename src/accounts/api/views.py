@@ -192,12 +192,18 @@ class ChangePasswordView(GenericAPIView):
     serializer_class = ChangePasswordSerializer
 
     def post(self, request, reset_token):
+        serializer = self.serializer_class(data=request.data)
         print(str(reset_token))
         try:
+            serializer.is_valid(raise_exception=True)
             reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
             print(str(reset_request))
             print(str(reset_request.account))
             account = reset_request.account
+            if serializer.is_valid():
+                account.set_password(serializer.validated_data["password"])
+                account.save()
+                reset_request.delete()
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             return Response({'detail': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
         
