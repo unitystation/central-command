@@ -85,7 +85,7 @@ class VerifyAccountSerializer(serializers.Serializer):
 class ChangePasswordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ("password")
+        fields = ("password",)
         extra_kwargs = {"password": {"write_only": True}}
 
     def update(self, instance, validated_data):

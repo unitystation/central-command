@@ -8,14 +8,8 @@ from rest_framework.generics import GenericAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_text
-from django.utils.http import urlsafe_base64_decode
-from django.contrib.auth.views import PasswordResetConfirmView
-from django.contrib.auth.forms import SetPasswordForm
-from django.http import HttpResponse
 
 from ..exceptions import MissingMailConfirmationError
 from ..models import Account
@@ -27,6 +21,7 @@ from .serializers import (
     VerifyAccountSerializer,
     ChangePasswordSerializer,
     ChangePasswordRequestSerializer,
+    PasswordResetRequestModel,
 )
 
 
@@ -196,13 +191,14 @@ class ChangePasswordView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ChangePasswordSerializer
 
-    def get(self, unique_identifier, token):
+    def get(self, request, reset_token):
+        print(str(reset_token))
         try:
-            account = Account.objects.get(unique_identifier)
+            account = PasswordResetRequestModel.objects.get(reset_token)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             return Response({'detail': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if account is not None and default_token_generator.check_token(account, token):
+        if account is not None and default_token_generator.check_token(account, reset_token["token"]):
             return Response({'detail': 'Password reset successfully.'}, status=status.HTTP_200_OK)
         else:
             return Response({'detail': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
