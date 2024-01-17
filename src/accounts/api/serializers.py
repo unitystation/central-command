@@ -110,7 +110,7 @@ class ChangePasswordRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Account with this email doesn't exist.")
 
         # Create a new instance of PasswordResetRequestModel using the account's verification token
-        token = uuid.uuid4()  # Replace with the actual field name
+        token = uuid.uuid4() 
         new_model_data = {"token": token, "account": account}
         return new_model_data
     
