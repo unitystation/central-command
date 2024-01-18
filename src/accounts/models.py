@@ -76,4 +76,4 @@ class PasswordResetRequestModel(models.Model):
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     def is_token_valid(self):
-        return timezone.now() >= self.created_at + 30
+        return timezone.now() <= self.created_at + 30
