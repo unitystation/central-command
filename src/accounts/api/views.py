@@ -13,13 +13,13 @@ from ..exceptions import MissingMailConfirmationError
 from ..models import Account
 from .serializers import (
     LoginWithCredentialsSerializer,
+    PasswordResetRequestModel,
     PublicAccountDataSerializer,
     RegisterAccountSerializer,
+    ResetPasswordRequestSerializer,
+    ResetPasswordSerializer,
     UpdateAccountSerializer,
     VerifyAccountSerializer,
-    ResetPasswordSerializer,
-    ResetPasswordRequestSerializer,
-    PasswordResetRequestModel,
 )
 
 
@@ -185,6 +185,7 @@ class VerifyAccountView(GenericAPIView):
 
         return Response(public_data, status=status.HTTP_200_OK)
 
+
 class ResetPasswordView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ResetPasswordSerializer
@@ -196,19 +197,20 @@ class ResetPasswordView(GenericAPIView):
             if serializer.is_valid(raise_exception=True):
                 reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
                 if not reset_request.is_token_valid():
-                    return Response({'error': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": "Invalid link or expired."}, status=status.HTTP_400_BAD_REQUEST)
                 account = reset_request.account
                 account.set_password(serializer.validated_data["password"])
                 account.save()
                 reset_request.delete()
                 return Response(data={"detail": "Changed password succesfully"}, status=status.HTTP_200_OK)
             else:
-                return Response({'error': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Invalid link or expired."}, status=status.HTTP_400_BAD_REQUEST)
         except (TypeError, ValueError, OverflowError, PasswordResetRequestModel.DoesNotExist):
-            return Response({'error': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response({"error": "Invalid link or expired."}, status=status.HTTP_400_BAD_REQUEST)
+
         return Response({"detail": "Operation Done."}, status=status.HTTP_200_OK)
-        
+
+
 class RequestPasswordResetView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ResetPasswordRequestSerializer
@@ -221,6 +223,6 @@ class RequestPasswordResetView(GenericAPIView):
             # Don't tell the user about the error, just move on.
             print(str(e))
             return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
-        
+
         serializer.save()
         return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)

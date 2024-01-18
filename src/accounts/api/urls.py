@@ -6,11 +6,11 @@ from .views import (
     LoginWithTokenView,
     PublicAccountDataView,
     RegisterAccountView,
+    RequestPasswordResetView,
     RequestVerificationTokenView,
+    ResetPasswordView,
     UpdateAccountView,
     VerifyAccountView,
-    ResetPasswordView,
-    RequestPasswordResetView,
 )
 
 app_name = "account"

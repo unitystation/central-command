@@ -1,12 +1,13 @@
 import secrets
 import uuid
+
 from django.conf import settings
 from django.contrib.auth import authenticate
+from django.utils import timezone
 from django_email_verification import sendConfirm
 from rest_framework import serializers
-from django.utils import timezone
 
-from ..models import (Account, PasswordResetRequestModel)
+from ..models import Account, PasswordResetRequestModel
 
 
 class PublicAccountDataSerializer(serializers.ModelSerializer):
@@ -85,12 +86,13 @@ class VerifyAccountSerializer(serializers.Serializer):
             )
         return account
 
+
 class ResetPasswordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = ("password",)
         extra_kwargs = {"password": {"write_only": True}}
-    
+
 
 class ResetPasswordRequestSerializer(serializers.ModelSerializer):
     class Meta:
@@ -108,9 +110,13 @@ class ResetPasswordRequestSerializer(serializers.ModelSerializer):
 
         # Create a new instance of PasswordResetRequestModel using the account's verification token
         token = secrets.token_urlsafe(32)
-        new_model_data = {"token": token, "account": account, "created_at": timezone.now() + timezone.timedelta(minutes=35)}
+        new_model_data = {
+            "token": token,
+            "account": account,
+            "created_at": timezone.now() + timezone.timedelta(minutes=35),
+        }
         return new_model_data
-    
+
     def create(self, validated_data):
         reset_request = PasswordResetRequestModel.objects.create(**validated_data)
         return reset_request

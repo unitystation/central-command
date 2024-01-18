@@ -1,9 +1,9 @@
 from datetime import timedelta
-from django.utils import timezone
 from uuid import uuid4
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 from .validators import AccountNameValidator, UsernameValidator
 
@@ -71,6 +71,7 @@ class Account(AbstractUser):
 
     def __str__(self):
         return f"{self.unique_identifier} as {self.username}"
+
 
 class PasswordResetRequestModel(models.Model):
     token = models.TextField()
