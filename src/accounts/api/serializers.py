@@ -112,6 +112,5 @@ class ResetPasswordRequestSerializer(serializers.ModelSerializer):
         return new_model_data
     
     def create(self, validated_data):
-        print(validated_data)
         reset_request = PasswordResetRequestModel.objects.create(**validated_data)
         return reset_request
