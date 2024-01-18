@@ -8,8 +8,6 @@ from rest_framework.generics import GenericAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-from django.contrib.auth.models import User
-from django.contrib.auth.tokens import default_token_generator
 
 from ..exceptions import MissingMailConfirmationError
 from ..models import Account
@@ -195,22 +193,21 @@ class ChangePasswordView(GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         print(str(reset_token))
         try:
-            serializer.is_valid(raise_exception=True)
-            reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
-            if(reset_request.is_token_valid() == False):
-                return Response({'detail': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
-            print(str(reset_request))
-            print(str(reset_request.account))
-            account = reset_request.account
-            if serializer.is_valid():
+            if serializer.is_valid(raise_exception=True):
+                reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
+                if not reset_request.is_token_valid():
+                    return Response({'error': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
+                account = reset_request.account
                 account.set_password(serializer.validated_data["password"])
                 account.save()
                 reset_request.delete()
-                return Response(data={"Operation Done": "Changed password succesfully"}, status=status.HTTP_200_OK)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            return Response({'detail': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(data={"detail": "Changed password succesfully"}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
+        except (TypeError, ValueError, OverflowError, PasswordResetRequestModel.DoesNotExist):
+            return Response({'error': 'Invalid link or expired.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response("soup", status=status.HTTP_200_OK)
+        return Response({"detail": "Operation Done."}, status=status.HTTP_200_OK)
         
 class RequestPasswordResetView(GenericAPIView):
     permission_classes = (AllowAny,)
@@ -222,8 +219,8 @@ class RequestPasswordResetView(GenericAPIView):
             serializer.is_valid(raise_exception=True)
         except Exception as e:
             # Don't tell the user about the error, just move on.
-            # Though maybe we can add a -dev flag check to report errors while not in a production environment?
-            return Response(data={"Operation Done": "Soup"}, status=status.HTTP_200_OK)
+            print(str(e))
+            return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
         
         serializer.save()
-        return Response(data={"Operation done" : "Soup"}, status=status.HTTP_200_OK)
+        return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
