@@ -1,5 +1,4 @@
 import secrets
-import uuid
 
 from django.conf import settings
 from django.contrib.auth import authenticate
