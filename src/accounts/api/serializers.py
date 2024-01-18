@@ -108,7 +108,7 @@ class ChangePasswordRequestSerializer(serializers.ModelSerializer):
 
         # Create a new instance of PasswordResetRequestModel using the account's verification token
         token = secrets.token_urlsafe(32)
-        new_model_data = {"token": token, "account": account, "expiry_datetime": timezone.now() + timezone.timedelta(minutes=35)}
+        new_model_data = {"token": token, "account": account, "created_at": timezone.now() + timezone.timedelta(minutes=35)}
         return new_model_data
     
     def create(self, validated_data):
