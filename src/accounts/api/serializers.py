@@ -85,14 +85,14 @@ class VerifyAccountSerializer(serializers.Serializer):
             )
         return account
 
-class ChangePasswordSerializer(serializers.ModelSerializer):
+class ResetPasswordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = ("password",)
         extra_kwargs = {"password": {"write_only": True}}
     
 
-class ChangePasswordRequestSerializer(serializers.ModelSerializer):
+class ResetPasswordRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = PasswordResetRequestModel
         fields = ["email"]

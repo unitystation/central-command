@@ -17,8 +17,8 @@ from .serializers import (
     RegisterAccountSerializer,
     UpdateAccountSerializer,
     VerifyAccountSerializer,
-    ChangePasswordSerializer,
-    ChangePasswordRequestSerializer,
+    ResetPasswordSerializer,
+    ResetPasswordRequestSerializer,
     PasswordResetRequestModel,
 )
 
@@ -185,9 +185,9 @@ class VerifyAccountView(GenericAPIView):
 
         return Response(public_data, status=status.HTTP_200_OK)
 
-class ChangePasswordView(GenericAPIView):
+class ResetPasswordView(GenericAPIView):
     permission_classes = (AllowAny,)
-    serializer_class = ChangePasswordSerializer
+    serializer_class = ResetPasswordSerializer
 
     def post(self, request, reset_token):
         serializer = self.serializer_class(data=request.data)
@@ -211,7 +211,7 @@ class ChangePasswordView(GenericAPIView):
         
 class RequestPasswordResetView(GenericAPIView):
     permission_classes = (AllowAny,)
-    serializer_class = ChangePasswordRequestSerializer
+    serializer_class = ResetPasswordRequestSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
