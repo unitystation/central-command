@@ -34,6 +34,6 @@ urlpatterns = [
         name="request-verification-token",
     ),
     path("verify-account", VerifyAccountView.as_view(), name="verify-account"),
-    path("reset-password/<str:reset_token>", ChangePasswordView.as_view(), name="change-passwordd"),
+    path("reset-password/<str:reset_token>", ChangePasswordView.as_view(), name="change-password"),
     path("reset-password/", RequestPasswordResetView.as_view(), name="change-password"),
 ]
