@@ -114,5 +114,4 @@ class ChangePasswordRequestSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         print(validated_data)
         reset_request = PasswordResetRequestModel.objects.create(**validated_data)
-        print(str(reset_request.expiry_datetime))
         return reset_request
