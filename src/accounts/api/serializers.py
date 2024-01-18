@@ -1,8 +1,10 @@
+import secrets
 import uuid
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django_email_verification import sendConfirm
 from rest_framework import serializers
+from django.utils import timezone
 
 from ..models import (Account, PasswordResetRequestModel)
 
@@ -105,11 +107,12 @@ class ChangePasswordRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Account with this email doesn't exist.")
 
         # Create a new instance of PasswordResetRequestModel using the account's verification token
-        token = uuid.uuid4() 
-        new_model_data = {"token": token, "account": account}
+        token = secrets.token_urlsafe(32)
+        new_model_data = {"token": token, "account": account, "expiry_datetime": timezone.now() + timezone.timedelta(minutes=35)}
         return new_model_data
     
     def create(self, validated_data):
         print(validated_data)
         reset_request = PasswordResetRequestModel.objects.create(**validated_data)
+        print(str(reset_request.expiry_datetime))
         return reset_request
