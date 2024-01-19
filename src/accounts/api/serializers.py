@@ -101,9 +101,8 @@ class ResetPasswordRequestSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
 
     def validate(self, data):
-        email = data.get("email")
+        email = data["email"]
         account = Account.objects.filter(email=email).first()
-        # Note: Make this silently fail later; users don't need to know about this.
         if account is None:
             raise serializers.ValidationError("Account with this email doesn't exist.")
 
@@ -117,5 +116,4 @@ class ResetPasswordRequestSerializer(serializers.ModelSerializer):
         return new_model_data
 
     def create(self, validated_data):
-        reset_request = PasswordResetRequestModel.objects.create(**validated_data)
-        return reset_request
+        return PasswordResetRequestModel.objects.create(**validated_data)

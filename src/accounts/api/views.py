@@ -192,7 +192,6 @@ class ResetPasswordView(GenericAPIView):
 
     def post(self, request, reset_token):
         serializer = self.serializer_class(data=request.data)
-        print(str(reset_token))
         try:
             if serializer.is_valid(raise_exception=True):
                 reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
@@ -205,8 +204,10 @@ class ResetPasswordView(GenericAPIView):
                 return Response(data={"detail": "Changed password succesfully"}, status=status.HTTP_200_OK)
             else:
                 return Response({"error": "Invalid link or expired."}, status=status.HTTP_400_BAD_REQUEST)
-        except (TypeError, ValueError, OverflowError, PasswordResetRequestModel.DoesNotExist):
+        except PasswordResetRequestModel.DoesNotExist:
             return Response({"error": "Invalid link or expired."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"detail": "Operation Done."}, status=status.HTTP_200_OK)
 
@@ -219,9 +220,8 @@ class RequestPasswordResetView(GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-        except Exception as e:
+        except Exception:
             # Don't tell the user about the error, just move on.
-            print(str(e))
             return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
 
         serializer.save()
