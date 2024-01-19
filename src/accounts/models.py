@@ -79,7 +79,7 @@ class PasswordResetRequestModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.token} as {str(self.account)} created at {str(self.created_at)}"
+        return f"{self.token} as {self.account} created at {self.created_at}"
 
     def is_token_valid(self):
         return timezone.now() <= timedelta(minutes=60)
