@@ -111,7 +111,7 @@ class ResetPasswordRequestSerializer(serializers.ModelSerializer):
         new_model_data = {
             "token": token,
             "account": account,
-            "created_at": timezone.now() + timezone.timedelta(minutes=35),
+            "created_at": timezone.now(),
         }
         return new_model_data
 
