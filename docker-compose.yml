@@ -1,10 +1,5 @@
 version: "3"
 
-x-common-volumes: &common-volumes
-  volumes:
-    - static-volume:/home/website/statics
-    - media-volume:/home/website/media
-
 services:
   db:
     image: postgres:14.1-alpine
@@ -21,7 +16,9 @@ services:
     expose:
       - 8000
     command: gunicorn central_command.wsgi:application --bind 0.0.0.0:8000
-    <<: *common-volumes
+  volumes:
+    - static-volume:/home/website/statics
+    - media-volume:/home/website/media
 
 volumes:
   db-data:
