@@ -1,6 +1,8 @@
 from uuid import uuid4
 
+from central_command import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.mail import send_mail
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
 from rest_framework import status
@@ -225,4 +227,15 @@ class RequestPasswordResetView(GenericAPIView):
             return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
 
         serializer.save()
+        send_mail(
+            "Password Reset Request",
+            "A password reset request has been made for your account.\n"
+            + "Please visit the following link to reset your password: "
+            + settings.APP_URL
+            + serializer.data["token"]
+            + "\n\nIf you have not made this request, please ignore this email. The link will expire within 35 minutes.",
+            settings.EMAIL_FROM_ADDRESS,
+            [serializer.data["account"].email],
+            fail_silently=False,
+        )
         return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)

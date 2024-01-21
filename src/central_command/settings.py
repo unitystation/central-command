@@ -123,6 +123,7 @@ EMAIL_SERVER = os.environ.get("EMAIL_HOST")
 EMAIL_ADDRESS = os.environ.get("EMAIL_HOST_USER")
 EMAIL_FROM_ADDRESS = os.environ.get("EMAIL_HOST_USER")
 EMAIL_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+EMAIL_PASSWORD_RESET = os.environ.get("WEBSITE_URL", "https://unitystation.org/reset-password/")
 EMAIL_MAIL_SUBJECT = "Confirm your Unitystation account"
 EMAIL_MAIL_HTML = "registration/confirmation_email.html"
 EMAIL_PAGE_TEMPLATE = "confirm_template.html"
