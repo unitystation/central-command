@@ -230,7 +230,7 @@ class RequestPasswordResetView(GenericAPIView):
 
 def send_email(recipient: str, context: dict) -> None:
     email_subject = "Unitystation: Password Reset Request"
-    email_body = render_to_string("email_password_reset.html", context)
+    email_body = render_to_string("password_reset.html", context)
 
     email = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, [recipient])
     email.content_subtype = "html"
