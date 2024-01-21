@@ -215,6 +215,14 @@ class RequestPasswordResetView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ResetPasswordRequestSerializer
 
+    def send_email(self, recipient: str, context: dict) -> None:
+        email_subject = "Unitystation: Password Reset Request"
+        email_body = render_to_string("password_reset.html", context)
+
+        email = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, [recipient])
+        email.content_subtype = "html"
+        email.send()
+
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         try:
@@ -224,14 +232,7 @@ class RequestPasswordResetView(GenericAPIView):
             return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
 
         serializer.save()
-        send_email(recipient=serializer.validated_data["email"], context={"token": serializer.validated_data["token"]})
+        self.send_email(
+            recipient=serializer.validated_data["email"], context={"token": serializer.validated_data["token"]}
+        )
         return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
-
-
-def send_email(recipient: str, context: dict) -> None:
-    email_subject = "Unitystation: Password Reset Request"
-    email_body = render_to_string("password_reset.html", context)
-
-    email = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, [recipient])
-    email.content_subtype = "html"
-    email.send()
