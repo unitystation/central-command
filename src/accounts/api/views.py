@@ -198,7 +198,7 @@ class ResetPasswordView(GenericAPIView):
             if serializer.is_valid(raise_exception=True):
                 reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
                 if not reset_request.is_token_valid():
-                    return Response({"error": "Invalid link or expired."}, status=status.HTTP_400_BAD_REQUEST)
+                    raise PasswordResetRequestModel.DoesNotExist
                 account = reset_request.account
                 account.set_password(serializer.validated_data["password"])
                 account.save()
