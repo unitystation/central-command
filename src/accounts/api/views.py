@@ -206,8 +206,6 @@ class ResetPasswordView(GenericAPIView):
                 return Response(data={"detail": "Changed password succesfully"}, status=status.HTTP_200_OK)
         except PasswordResetRequestModel.DoesNotExist:
             return Response({"error": "Invalid link or expired."}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"detail": "Operation Done."}, status=status.HTTP_200_OK)
 

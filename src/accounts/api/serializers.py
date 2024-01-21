@@ -96,7 +96,7 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
 class ResetPasswordRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = PasswordResetRequestModel
-        fields = ["email"]
+        fields = ("email",)
 
     email = serializers.EmailField()
 
@@ -106,14 +106,11 @@ class ResetPasswordRequestSerializer(serializers.ModelSerializer):
         if account is None:
             raise serializers.ValidationError("Account with this email doesn't exist.")
 
-        # Create a new instance of PasswordResetRequestModel using the account's verification token
-        token = secrets.token_urlsafe(32)
-        new_model_data = {
-            "token": token,
+        return {
+            "token": secrets.token_urlsafe(32),
             "account": account,
             "created_at": timezone.now(),
         }
-        return new_model_data
 
     def create(self, validated_data):
         return PasswordResetRequestModel.objects.create(**validated_data)
