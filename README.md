@@ -23,6 +23,9 @@ Copy `example.env` to `.env` and customize it.
 
 You will need python 3.11+
 
+<details>
+<summary>Extra steps if don't want to install poetry globally for some reason</summary>
+
 #### Install venv (only first time or after updating sytem python version)
 
 ```sh
@@ -40,6 +43,8 @@ python -m venv .venv
 ```bat
 .venv\Scripts\activate
 ```
+
+</details>
 
 #### Dependency installation
 
