@@ -227,7 +227,7 @@ class RequestPasswordResetView(GenericAPIView):
             "Password Reset Request",
             "A password reset request has been made for your account.\n"
             + "Please visit the following link to reset your password: "
-            + settings.APP_URL
+            + settings.PASSWORD_RESET_LINK
             + serializer.data["token"]
             + "\n\nIf you have not made this request, please ignore this email. The link will expire within 35 minutes.",
             settings.EMAIL_FROM_ADDRESS,

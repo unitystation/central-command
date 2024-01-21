@@ -123,7 +123,6 @@ EMAIL_SERVER = os.environ.get("EMAIL_HOST")
 EMAIL_ADDRESS = os.environ.get("EMAIL_HOST_USER")
 EMAIL_FROM_ADDRESS = os.environ.get("EMAIL_HOST_USER")
 EMAIL_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-EMAIL_PASSWORD_RESET = os.environ.get("WEBSITE_URL", "https://unitystation.org/reset-password/")
 EMAIL_MAIL_SUBJECT = "Confirm your Unitystation account"
 EMAIL_MAIL_HTML = "registration/confirmation_email.html"
 EMAIL_PAGE_TEMPLATE = "confirm_template.html"
@@ -177,3 +176,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Whitenoise statics compression and caching
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+PASSWORD_RESET_LINK = os.environ.get("WEBSITE_URL", "https://unitystation.org/reset-password/")
