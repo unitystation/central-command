@@ -218,7 +218,7 @@ class RequestPasswordResetView(GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-        except Exception:
+        except ValidationError:
             # Don't tell the user about the error, just move on.
             return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
 
