@@ -109,7 +109,6 @@ class ResetPasswordRequestSerializer(serializers.ModelSerializer):
         return {
             "token": secrets.token_urlsafe(32),
             "account": account,
-            "created_at": timezone.now(),
         }
 
     def create(self, validated_data):
