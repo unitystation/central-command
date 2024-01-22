@@ -233,6 +233,7 @@ class RequestPasswordResetView(GenericAPIView):
 
         serializer.save()
         self.send_email(
-            recipient=serializer.validated_data["account"].email, context={"token": serializer.validated_data["token"]}
+            recipient=serializer.validated_data["account"].email,
+            context={"link": f"{settings.PASS_RESET_LINK}{serializer.validated_data['token']}"},
         )
         return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
