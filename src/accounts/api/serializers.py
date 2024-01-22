@@ -2,7 +2,6 @@ import secrets
 
 from django.conf import settings
 from django.contrib.auth import authenticate
-from django.utils import timezone
 from django_email_verification import sendConfirm
 from rest_framework import serializers
 
