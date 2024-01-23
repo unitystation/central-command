@@ -1,7 +1,9 @@
+from datetime import timedelta
 from uuid import uuid4
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 from .validators import AccountNameValidator, UsernameValidator
 
@@ -69,3 +71,15 @@ class Account(AbstractUser):
 
     def __str__(self):
         return f"{self.unique_identifier} as {self.username}"
+
+
+class PasswordResetRequestModel(models.Model):
+    token = models.TextField()
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.token} as {self.account} created at {self.created_at}"
+
+    def is_token_valid(self):
+        return timezone.now() <= timedelta(minutes=60)

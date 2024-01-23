@@ -18,6 +18,8 @@ ignore = [
     "S101",
     # it is annoying to annotate django Meta model properties as CalssVar for no reason
     "RUF012",
+    # treats a link with the word "password" in it as a hardcoded password
+    "S105",
 ]
 select = [
     # pyflakes

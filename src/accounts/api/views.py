@@ -1,6 +1,9 @@
 from uuid import uuid4
 
+from central_command import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
 from rest_framework import status
@@ -13,8 +16,11 @@ from ..exceptions import MissingMailConfirmationError
 from ..models import Account
 from .serializers import (
     LoginWithCredentialsSerializer,
+    PasswordResetRequestModel,
     PublicAccountDataSerializer,
     RegisterAccountSerializer,
+    ResetPasswordRequestSerializer,
+    ResetPasswordSerializer,
     UpdateAccountSerializer,
     VerifyAccountSerializer,
 )
@@ -181,3 +187,53 @@ class VerifyAccountView(GenericAPIView):
         public_data = PublicAccountDataSerializer(account).data
 
         return Response(public_data, status=status.HTTP_200_OK)
+
+
+class ResetPasswordView(GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ResetPasswordSerializer
+
+    def post(self, request, reset_token):
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if serializer.is_valid(raise_exception=True):
+                reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
+                if not reset_request.is_token_valid():
+                    raise PasswordResetRequestModel.DoesNotExist
+                account = reset_request.account
+                account.set_password(serializer.validated_data["password"])
+                account.save()
+                reset_request.delete()
+                return Response(data={"detail": "Changed password succesfully"}, status=status.HTTP_200_OK)
+        except PasswordResetRequestModel.DoesNotExist:
+            return Response({"error": "Invalid link or expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"detail": "Operation Done."}, status=status.HTTP_200_OK)
+
+
+class RequestPasswordResetView(GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ResetPasswordRequestSerializer
+
+    def send_email(self, recipient: str, context: dict) -> None:
+        email_subject = "Unitystation: Password Reset Request"
+        email_body = render_to_string("password_reset.html", context)
+
+        email = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, [recipient])
+        email.content_subtype = "html"
+        email.send()
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError:
+            # Don't tell the user about the error, just move on.
+            return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
+
+        serializer.save()
+        self.send_email(
+            recipient=serializer.validated_data["account"].email,
+            context={"link": f"{settings.PASS_RESET_LINK}{serializer.validated_data['token']}"},
+        )
+        return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)

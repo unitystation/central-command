@@ -176,3 +176,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Whitenoise statics compression and caching
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+PASS_RESET_LINK = "https://unitystation.org/reset-password/"

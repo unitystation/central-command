@@ -1,9 +1,11 @@
+import secrets
+
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django_email_verification import sendConfirm
 from rest_framework import serializers
 
-from ..models import Account
+from ..models import Account, PasswordResetRequestModel
 
 
 class PublicAccountDataSerializer(serializers.ModelSerializer):
@@ -81,3 +83,32 @@ class VerifyAccountSerializer(serializers.Serializer):
                 "Verification token seems invalid or maybe outdated. Try requesting a new one."
             )
         return account
+
+
+class ResetPasswordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ("password",)
+        extra_kwargs = {"password": {"write_only": True}}
+
+
+class ResetPasswordRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PasswordResetRequestModel
+        fields = ("email",)
+
+    email = serializers.EmailField()
+
+    def validate(self, data):
+        email = data["email"]
+        account = Account.objects.get(email=email)
+        if account is None:
+            raise serializers.ValidationError("Account with this email doesn't exist.")
+
+        return {
+            "token": secrets.token_urlsafe(32),
+            "account": account,
+        }
+
+    def create(self, validated_data):
+        return PasswordResetRequestModel.objects.create(**validated_data)
