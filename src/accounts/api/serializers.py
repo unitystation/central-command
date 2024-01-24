@@ -2,10 +2,10 @@ import secrets
 
 from django.conf import settings
 from django.contrib.auth import authenticate
-from django_email_verification import sendConfirm
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from ..models import Account, PasswordResetRequestModel
+from ..models import Account, AccountConfirmation, PasswordResetRequestModel
 
 
 class PublicAccountDataSerializer(serializers.ModelSerializer):
@@ -27,9 +27,9 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create and return a new account"""
-        account = Account.objects.create_user(**validated_data)
+        account: Account = Account.objects.create_user(**validated_data)
         if settings.REQUIRE_EMAIL_CONFIRMATION:
-            sendConfirm(account)
+            account.send_confirmation_mail()
         return account
 
 
@@ -41,7 +41,7 @@ class LoginWithCredentialsSerializer(serializers.Serializer):
         account = authenticate(username=data["email"], password=data["password"])
         if account is None:
             raise serializers.ValidationError("Unable to login with provided credentials.")
-        if not account.is_active:
+        if not account.is_confirmed:
             raise serializers.ValidationError(
                 "This account hasn't done the mail confirmation step or has been disabled."
             )
@@ -61,8 +61,8 @@ class UpdateAccountSerializer(serializers.ModelSerializer):
         instance.set_password(validated_data.get("password", instance.password))
 
         if old_email != instance.email and settings.REQUIRE_EMAIL_CONFIRMATION:
-            instance.is_active = False
-            sendConfirm(instance)
+            instance.is_confirmed = False
+            instance.send_confirmation_mail()
 
         instance.save()
         return instance
@@ -91,6 +91,11 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
         fields = ("password",)
         extra_kwargs = {"password": {"write_only": True}}
 
+    def validate_password(self, value):
+        # Validate the password using Django's built-in validators
+        validate_password(value)
+        return value
+
 
 class ResetPasswordRequestSerializer(serializers.ModelSerializer):
     class Meta:
@@ -112,3 +117,29 @@ class ResetPasswordRequestSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return PasswordResetRequestModel.objects.create(**validated_data)
+
+
+class ConfirmAccountSerializer(serializers.Serializer):
+    token = serializers.CharField()
+
+    def validate(self, data):
+        try:
+            account_confirmation = AccountConfirmation.objects.get(token=data["token"])
+        except AccountConfirmation.DoesNotExist:
+            raise serializers.ValidationError("Token is invalid or expired.")
+
+        if not account_confirmation.is_token_valid():
+            raise serializers.ValidationError("Token is invalid or expired.")
+        return account_confirmation
+
+
+class ResendAccountSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate(self, data):
+        email = data["email"]
+        account = Account.objects.get(email=email)
+        if account is None:
+            raise Account.DoesNotExist("Account with this email doesn't exist.")
+
+        return account

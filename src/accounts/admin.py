@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Account
+from .models import Account, AccountConfirmation, PasswordResetRequestModel
 
 
 @admin.register(Account)
@@ -10,6 +10,7 @@ class AccountAdminView(admin.ModelAdmin):
         "is_active",
         "unique_identifier",
         "username",
+        "is_confirmed",
         "is_verified",
         "legacy_id",
     )
@@ -32,9 +33,20 @@ class AccountAdminView(admin.ModelAdmin):
                 "classes": ("wide",),
                 "fields": (
                     "is_active",
+                    "is_confirmed",
                     "is_verified",
                 ),
             },
         ),
         ("Legacy", {"classes": ("wide",), "fields": ("legacy_id",)}),
     )
+
+
+@admin.register(AccountConfirmation)
+class AccountConfirmationAdminView(admin.ModelAdmin):
+    pass
+
+
+@admin.register(PasswordResetRequestModel)
+class PasswordResetRequestModelAdmin(admin.ModelAdmin):
+    pass

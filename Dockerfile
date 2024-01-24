@@ -14,7 +14,7 @@ ENV PYTHONUNBUFFERED=yes \
 
 WORKDIR /src
 
-COPY poetry.lock pyproject.toml .
+COPY poetry.lock pyproject.toml ./
 
 RUN : \
     # psycopg runtime dep
@@ -36,12 +36,15 @@ COPY src .
 RUN : \
     && mkdir /home/website \
     && mkdir /home/website/statics \
-    && mkdir /home/website/media
+    && mkdir /home/website/media \
+    && mkdir /home/website/logs \
 
 # removes \r from script and makes it executable.
 # both of these are caused by windows users touching file and not configuring git properly
 RUN : \
     && sed -i 's/\r//g' entrypoint.sh \
     && chmod +x entrypoint.sh
+
+RUN crontab -l | { cat; echo "* * * * * python /src/manage.py send_queued_mail >> /home/website/logs/send_mail.log 2>&1"; } | crontab -
 
 ENTRYPOINT ["./entrypoint.sh"]

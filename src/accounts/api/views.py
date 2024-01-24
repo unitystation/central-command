@@ -1,9 +1,11 @@
+import logging
+
+from urllib.parse import urljoin
 from uuid import uuid4
 
-from central_command import settings
+from commons.mail_wrapper import send_email_with_template
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.core.mail import EmailMessage
-from django.template.loader import render_to_string
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
 from rest_framework import status
@@ -15,15 +17,19 @@ from rest_framework.serializers import ValidationError
 from ..exceptions import MissingMailConfirmationError
 from ..models import Account
 from .serializers import (
+    ConfirmAccountSerializer,
     LoginWithCredentialsSerializer,
     PasswordResetRequestModel,
     PublicAccountDataSerializer,
     RegisterAccountSerializer,
+    ResendAccountSerializer,
     ResetPasswordRequestSerializer,
     ResetPasswordSerializer,
     UpdateAccountSerializer,
     VerifyAccountSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class PublicAccountDataView(RetrieveAPIView):
@@ -181,7 +187,11 @@ class VerifyAccountView(GenericAPIView):
         except ValidationError as e:
             return Response(data={"error": str(e)}, status=e.status_code)
         except Exception as e:
-            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error("Error while verifying account: %s", e)
+            return Response(
+                data={"error": "Something went wrong when verifying your account."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         account = Account.objects.get(unique_identifier=serializer.data["unique_identifier"])
         public_data = PublicAccountDataSerializer(account).data
@@ -204,36 +214,101 @@ class ResetPasswordView(GenericAPIView):
                 account.set_password(serializer.validated_data["password"])
                 account.save()
                 reset_request.delete()
-                return Response(data={"detail": "Changed password succesfully"}, status=status.HTTP_200_OK)
+                return Response(status=status.HTTP_200_OK)
         except PasswordResetRequestModel.DoesNotExist:
             return Response({"error": "Invalid link or expired."}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"detail": "Operation Done."}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
 
 class RequestPasswordResetView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ResetPasswordRequestSerializer
 
-    def send_email(self, recipient: str, context: dict) -> None:
-        email_subject = "Unitystation: Password Reset Request"
-        email_body = render_to_string("password_reset.html", context)
-
-        email = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, [recipient])
-        email.content_subtype = "html"
-        email.send()
-
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
         except ValidationError:
-            # Don't tell the user about the error, just move on.
-            return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
+            logger.warning(
+                "Attempted to reset password for non-existing account: %s", serializer.validated_data["email"]
+            )
+            return Response(status=status.HTTP_200_OK)
 
         serializer.save()
-        self.send_email(
+        link = urljoin(settings.PASS_RESET_URL, serializer.validated_data["token"])
+
+        send_email_with_template(
             recipient=serializer.validated_data["account"].email,
-            context={"link": f"{settings.PASS_RESET_LINK}{serializer.validated_data['token']}"},
+            subject="Reset your password",
+            template="password_reset.html",
+            context={"link": link},
         )
+
         return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
+
+
+class ConfirmAccountView(GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ConfirmAccountSerializer
+
+    def post(self, request, confirm_token):
+        serializer = self.serializer_class(data={"token": confirm_token})
+        print(serializer)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            return Response(data={"error": str(e)}, status=e.status_code)
+
+        account_id = serializer.validated_data.account.unique_identifier
+
+        try:
+            account = Account.objects.get(unique_identifier=account_id)
+            account.is_active = True
+            account.is_confirmed = True
+            account.save()
+        except Account.DoesNotExist:
+            logger.warning("Attempted to confirm account that does not exist: %s", account_id)
+            return Response(
+                data={"error": "Account for this confirmation link does not exist."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error("Error while confirming account: %s", e)
+            return Response(
+                data={"error": "Something went wrong while confirming your account."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        serializer.validated_data.delete()
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class ResendAccountConfirmationView(GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ResendAccountSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            return Response(data={"error": str(e)}, status=e.status_code)
+        except Account.DoesNotExist:
+            logger.warning(
+                "Attempted to resend account confirmation for non-existing account: %s",
+                serializer.validated_data["email"],
+            )
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error("Error while resending account confirmation: %s", e)
+            return Response(
+                data={"error": "Something went wrong while resending your account confirmation."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        account = serializer.validated_data
+        account.send_confirmation_mail()
+
+        return Response(status=status.HTTP_200_OK)

@@ -1,6 +1,10 @@
 from datetime import timedelta
+from secrets import token_urlsafe
+from urllib.parse import urljoin
 from uuid import uuid4
 
+from commons.mail_wrapper import send_email_with_template
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
@@ -35,6 +39,12 @@ class Account(AbstractUser):
             "Public username is used to identify your account publicly and shows in "
             "OOC. This can be changed at any time"
         ),
+    )
+
+    is_confirmed = models.BooleanField(
+        default=False,
+        verbose_name="Confirmed",
+        help_text="Has this account been confirmed via email?",
     )
 
     is_verified = models.BooleanField(
@@ -72,6 +82,39 @@ class Account(AbstractUser):
     def __str__(self):
         return f"{self.unique_identifier} as {self.username}"
 
+    def send_confirmation_mail(self):
+        confirmation_token = token_urlsafe(32)
+
+        previous_confirmations = AccountConfirmation.objects.filter(account=self)
+        previous_confirmations.delete()
+
+        AccountConfirmation.objects.create(
+            token=confirmation_token,
+            account=self,
+        )
+
+        send_email_with_template(
+            recipient=self.email,
+            subject="Confirm your account",
+            template="confirm_template.html",
+            context={
+                "user_name": self.username,
+                "link": urljoin(settings.ACCOUNT_CONFIRMATION_URL, confirmation_token),
+            },
+        )
+
+
+class AccountConfirmation(models.Model):
+    token = models.TextField()
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Account confirmation request for {self.account} created at {self.created_at}"
+
+    def is_token_valid(self):
+        return (self.created_at + timedelta(minutes=settings.ACCOUNT_CONFIRMATION_TOKEN_TTL)) > timezone.now()
+
 
 class PasswordResetRequestModel(models.Model):
     token = models.TextField()
@@ -79,7 +122,7 @@ class PasswordResetRequestModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.token} as {self.account} created at {self.created_at}"
+        return f"Password reset request for {self.account} created at {self.created_at}"
 
     def is_token_valid(self):
-        return timezone.now() <= timedelta(minutes=60)
+        return (self.created_at + timedelta(minutes=settings.PASS_RESET_TOKEN_TTL)) > timezone.now()
