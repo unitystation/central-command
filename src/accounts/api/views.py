@@ -265,9 +265,7 @@ class ConfirmAccountView(GenericAPIView):
 
         try:
             account = Account.objects.get(unique_identifier=account_id)
-            account.is_active = True
-            account.is_confirmed = True
-            account.save()
+
         except Account.DoesNotExist:
             logger.warning("Attempted to confirm account that does not exist: %s", account_id)
             return Response(
@@ -280,6 +278,9 @@ class ConfirmAccountView(GenericAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        account.is_active = True
+        account.is_confirmed = True
+        account.save()
         serializer.validated_data.delete()
 
         return Response(status=status.HTTP_200_OK)
