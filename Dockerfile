@@ -37,7 +37,7 @@ RUN : \
     && mkdir /home/website \
     && mkdir /home/website/statics \
     && mkdir /home/website/media \
-    && mkdir /home/website/logs \
+    && mkdir /home/website/logs
 
 # removes \r from script and makes it executable.
 # both of these are caused by windows users touching file and not configuring git properly
