@@ -169,12 +169,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Website configuration
-WEBSITE_URL = os.environ.get("WEBSITE_URL", "https://unitystation.org")
+WEBSITE_URL = os.environ.get("WEBSITE_URL")
 
-PASS_RESET_URL_SUFFIX = os.environ.get("PASS_RESET_URL_SUFFIX", "reset-password/")
+PASS_RESET_URL_SUFFIX = os.environ.get("PASS_RESET_URL_SUFFIX")
 PASS_RESET_URL = urljoin(WEBSITE_URL, PASS_RESET_URL_SUFFIX)
 PASS_RESET_TOKEN_TTL = 60  # minutes
 
-ACCOUNT_CONFIRMATION_URL_SUFFIX = os.environ.get("ACCOUNT_CONFIRMATION_URL_SUFFIX", "confirm/")
+ACCOUNT_CONFIRMATION_URL_SUFFIX = os.environ.get("ACCOUNT_CONFIRMATION_URL_SUFFIX")
 ACCOUNT_CONFIRMATION_URL = urljoin(WEBSITE_URL, ACCOUNT_CONFIRMATION_URL_SUFFIX)
 ACCOUNT_CONFIRMATION_TOKEN_TTL = 24  # hours
