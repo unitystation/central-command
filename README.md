@@ -85,7 +85,10 @@ Docker (with help of compose) lets you launch entire project including database 
 Assuming you've managed to get a page running on http://localhost:8000/, we can now start doing things such as registering a test account.
 
 - http://localhost:8000/admin -> View all accounts and edit existing ones.
-- http://localhost:8000/accounts/register -> Create an account (if you already don't have one)
-- http://localhost:8000/accounts/verify-account -> Test account verfication manually.
+- http://localhost:8000/accounts/register -> Create an account (if you already don't have one).
+- http://localhost:8000/accounts/login-credentials -> Test loging in with a username and password.
+- http://localhost:8000/accounts/login-token -> Test loging in with a token (see admin page if you lost the token after login with credentials).
 
-To find more api end points or add new ones, check out `urls.py` under the respective folder of what feature you want mess around with.
+To find more api end points or add new ones, check out `urls.py` under the respective folder of what feature you want 
+mess around with, or you can use [Bruno](https://www.usebruno.com/) (a Postman alternative) to test out the API. 
+The Bruno project is included in the repository and you can find it in the 'api-collection' folder.
