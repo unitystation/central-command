@@ -113,6 +113,8 @@ class AccountConfirmation(models.Model):
         return f"Account confirmation request for {self.account} created at {self.created_at}"
 
     def is_token_valid(self):
+        if self.created_at is None:
+            return False
         return (self.created_at + timedelta(minutes=settings.ACCOUNT_CONFIRMATION_TOKEN_TTL)) > timezone.now()
 
 
@@ -125,4 +127,6 @@ class PasswordResetRequestModel(models.Model):
         return f"Password reset request for {self.account} created at {self.created_at}"
 
     def is_token_valid(self):
+        if self.created_at is None:
+            return False
         return (self.created_at + timedelta(minutes=settings.PASS_RESET_TOKEN_TTL)) > timezone.now()

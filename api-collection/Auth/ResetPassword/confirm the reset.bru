@@ -5,13 +5,13 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/accounts/
+  url: {{baseUrl}}/accounts/reset-password/<token here>
   body: json
   auth: none
 }
 
 body:json {
   {
-    "email": "email@email.com"
+    "password": "admin"
   }
 }

@@ -7,13 +7,15 @@ from commons.error_response import ErrorResponse
 from commons.mail_wrapper import send_email_with_template
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from drf_spectacular.utils import extend_schema
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, RetrieveAPIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
+from rest_framework.views import APIView
 
 from ..exceptions import MissingMailConfirmationError
 from ..models import Account
@@ -33,14 +35,15 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
-class PublicAccountDataView(RetrieveAPIView):
-    permission_classes = (AllowAny,)
-    queryset = Account.objects.all()
-    serializer_class = PublicAccountDataSerializer
-
-
 class LoginWithTokenView(KnoxLoginView):
+    """
+    Login by providing a token in the header of the request, Example: 'Authorization: Token <token>'.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
+    serializer_class = None
 
     def post(self, request, format=None):
         if request.auth is None:
@@ -69,6 +72,12 @@ class LoginWithTokenView(KnoxLoginView):
 
 
 class LoginWithCredentialsView(GenericAPIView):
+    """
+    Login by providing email and password.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = LoginWithCredentialsSerializer
 
@@ -99,6 +108,12 @@ class LoginWithCredentialsView(GenericAPIView):
 
 
 class RegisterAccountView(GenericAPIView):
+    """
+    Register a new account.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = RegisterAccountSerializer
 
@@ -121,6 +136,12 @@ class RegisterAccountView(GenericAPIView):
 
 
 class UpdateAccountView(GenericAPIView):
+    """
+    Update your account data.
+
+    **Requires Token authentication**
+    """
+
     serializer_class = UpdateAccountSerializer
 
     def post(self, request):
@@ -143,8 +164,14 @@ class UpdateAccountView(GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class RequestVerificationTokenView(GenericAPIView):
-    def get(self, *args, **kwargs):
+class RequestVerificationTokenView(APIView):
+    """
+    Request a new verification token to verify your account in-game.
+
+    **Requires Token authentication**
+    """
+
+    def post(self, *args, **kwargs):
         verification_token = uuid4()
 
         try:
@@ -168,6 +195,12 @@ class RequestVerificationTokenView(GenericAPIView):
 
 
 class VerifyAccountView(GenericAPIView):
+    """
+    Given a verification token, verify the account.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = VerifyAccountSerializer
 
@@ -185,7 +218,14 @@ class VerifyAccountView(GenericAPIView):
         return Response(public_data, status=status.HTTP_200_OK)
 
 
+@extend_schema(operation_id="accounts_reset_password_<token>_create")
 class ResetPasswordView(GenericAPIView):
+    """
+    Given a reset token and new password, reset the account's password.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = ResetPasswordSerializer
 
@@ -210,6 +250,12 @@ class ResetPasswordView(GenericAPIView):
 
 
 class RequestPasswordResetView(GenericAPIView):
+    """
+    Request a password reset link for a given mail.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = ResetPasswordRequestSerializer
 
@@ -234,10 +280,16 @@ class RequestPasswordResetView(GenericAPIView):
             context={"link": link},
         )
 
-        return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
 
 class ConfirmAccountView(GenericAPIView):
+    """
+    Given a confirmation token, confirm the account.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = ConfirmAccountSerializer
 
@@ -266,6 +318,12 @@ class ConfirmAccountView(GenericAPIView):
 
 
 class ResendAccountConfirmationView(GenericAPIView):
+    """
+    Resend the confirmation mail for a given account.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = ResendAccountSerializer
 

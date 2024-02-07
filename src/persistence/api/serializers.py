@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ..models import Character, Other, PolyPhrase
+from ..models import Character
 
 
 class CompatibleCharactersRequestSerializer(serializers.Serializer):
@@ -22,18 +22,3 @@ class UpdateCharacterSerializer(serializers.ModelSerializer):
         fields = ("id", "account", "fork_compatibility", "character_sheet_version", "data", "last_updated")
 
         read_only_fields = ("id", "account", "last_updated")
-
-
-class OtherSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Other
-        fields = (
-            "account",
-            "other_data",
-        )
-
-
-class PolyPhraseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PolyPhrase
-        fields = ("id", "said_by", "phrase")

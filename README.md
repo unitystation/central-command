@@ -15,11 +15,21 @@ The all-in-one backend application for [Unitystation](https://github.com/unityst
 
 ## Development guide
 
-### Settings file
+#### pre-commit
 
-Copy `example.env` to `.env` and customize it.
+pre-commit is a git hook which runs every time you make a commit to catch linting and formatting errors early.  
 
-### Setting up python
+```sh
+pre-commit install
+```
+
+> Hint: if the world is on fire, production servers down, clown at your doorstep and you don't have time to make linters happy, add `-n` to `git commit` command (CI will still be mad though).
+
+### Environment setup
+
+Copy `example.env` to `.env` and customize it. You can then start development by either using docker or running the project locally.
+
+### Setting up python to run the project locally
 
 You will need python 3.11+
 
@@ -60,15 +70,12 @@ Install dev dependencies
 poetry install
 ```
 
-#### pre-commit
+#### Start the server
 
-pre-commit is a git hook which runs every time you make a commit to catch linting and formatting errors early.  
-
+from the src folder run
 ```sh
-pre-commit install
+python manage.py runserver
 ```
-
-> Hint: if the world is on fire, production servers down, clown at your doorstep and you don't have time to make linters happy, add `-n` to `git commit` command (CI will still be mad though).
 
 ### Setting up Docker
 
@@ -78,17 +85,15 @@ Docker (with help of compose) lets you launch entire project including database 
 
 2- Launch project by running `docker compose -f dev-compose.yml up --build`.
 
-3- Test out the webui by accessing http://localhost:8000/
+### Try it out
 
-### Navigating web UI
+After everything is done, you can access the web UI at http://localhost:8000/. Here you will see the automatic documentation for the API and you can test out the API end points.
 
-Assuming you've managed to get a page running on http://localhost:8000/, we can now start doing things such as registering a test account.
-
+Some other useful links:
 - http://localhost:8000/admin -> View all accounts and edit existing ones.
-- http://localhost:8000/accounts/register -> Create an account (if you already don't have one).
+- http://localhost:8000/accounts/register -> Create an account.
 - http://localhost:8000/accounts/login-credentials -> Test loging in with a username and password.
 - http://localhost:8000/accounts/login-token -> Test loging in with a token (see admin page if you lost the token after login with credentials).
 
-To find more api end points or add new ones, check out `urls.py` under the respective folder of what feature you want 
-mess around with, or you can use [Bruno](https://www.usebruno.com/) (a Postman alternative) to test out the API. 
-The Bruno project is included in the repository and you can find it in the 'api-collection' folder.
+You can also use [Bruno](https://www.usebruno.com/) (a Postman alternative) to test out the API. 
+The Bruno project is included in the repository and you can find it in the 'api-collection' folder in the root of the repository.

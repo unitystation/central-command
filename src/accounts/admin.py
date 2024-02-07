@@ -3,6 +3,28 @@ from django.contrib import admin
 from .models import Account, AccountConfirmation, PasswordResetRequestModel
 
 
+class AccountConfirmationInline(admin.TabularInline):
+    model = AccountConfirmation
+    extra = 0
+    readonly_fields = ("token", "created_at", "is_token_valid_display")
+
+    def is_token_valid_display(self, instance):
+        return instance.is_token_valid()
+
+    is_token_valid_display.short_description = "Is Token Valid"
+
+
+class PasswordResetRequestInline(admin.TabularInline):
+    model = PasswordResetRequestModel
+    extra = 0
+    readonly_fields = ("token", "created_at", "is_token_valid_display")
+
+    def is_token_valid_display(self, instance):
+        return instance.is_token_valid()
+
+    is_token_valid_display.short_description = "Is Token Valid"
+
+
 @admin.register(Account)
 class AccountAdminView(admin.ModelAdmin):
     list_display = (
@@ -40,13 +62,4 @@ class AccountAdminView(admin.ModelAdmin):
         ),
         ("Legacy", {"classes": ("wide",), "fields": ("legacy_id",)}),
     )
-
-
-@admin.register(AccountConfirmation)
-class AccountConfirmationAdminView(admin.ModelAdmin):
-    pass
-
-
-@admin.register(PasswordResetRequestModel)
-class PasswordResetRequestModelAdmin(admin.ModelAdmin):
-    pass
+    inlines = [AccountConfirmationInline, PasswordResetRequestInline]

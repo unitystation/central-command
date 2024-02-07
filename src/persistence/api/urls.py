@@ -6,11 +6,7 @@ from .views import (
     GetAllCharactersByAccountView,
     GetCharacterByIdView,
     GetCompatibleCharacters,
-    RandomPolyPhraseView,
-    ReadOtherDataView,
     UpdateCharacterView,
-    WriteOtherDataView,
-    WritePolyPhraseView,
 )
 
 app_name = "persistence"
@@ -22,8 +18,4 @@ urlpatterns = [
     path("characters/compatible", GetCompatibleCharacters.as_view(), name="characters-compatible"),
     path("characters/<int:pk>/update", UpdateCharacterView.as_view(), name="characters-patch"),
     path("characters/<int:pk>/delete", DeleteCharacterView.as_view(), name="characters-delete"),
-    path("other-data/read", ReadOtherDataView.as_view(), name="read"),
-    path("other-data/write", WriteOtherDataView.as_view(), name="write"),
-    path("poly-says", RandomPolyPhraseView.as_view(), name="poly-says"),
-    path("poly-hears", WritePolyPhraseView.as_view(), name="poly-hears"),
 ]

@@ -5,7 +5,6 @@ from .views import (
     ConfirmAccountView,
     LoginWithCredentialsView,
     LoginWithTokenView,
-    PublicAccountDataView,
     RegisterAccountView,
     RequestPasswordResetView,
     RequestVerificationTokenView,
@@ -26,8 +25,6 @@ urlpatterns = [
     ),
     path("register", RegisterAccountView.as_view(), name="register"),
     path("update-account", UpdateAccountView.as_view(), name="update"),
-    path("account", PublicAccountDataView.as_view(), name="public-data"),
-    path("account/<str:pk>", PublicAccountDataView.as_view(), name="public-data"),
     path("logout", knox_views.LogoutView.as_view(), name="logout"),
     path("logoutall", knox_views.LogoutAllView.as_view(), name="logoutall"),
     path(

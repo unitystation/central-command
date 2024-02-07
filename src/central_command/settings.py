@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "post_office",
     "accounts",
     "persistence",
+    "drf_spectacular",
 ]
 
 # What user model to use for authentication?
@@ -95,11 +96,28 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": ["knox.auth.TokenAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     "EXCEPTION_HANDLER": "commons.error_response.custom_exception_handler",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Central Command",
+    "DESCRIPTION": """
+The all-in-one backend application for Unitystation
+
+Features
+* Account management and user validation.
+* Server list management.
+* In-game persistence.
+* Works cross-fork!
+* Modular architecture.
+    """,
+    "VERSION": None,
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 # Token expiration

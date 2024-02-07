@@ -13,12 +13,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from commons.root_view import RootView
 from django.contrib import admin
 from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
 urlpatterns = [
-    path("", RootView.as_view(), name="root"),
+    path("", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("admin/", admin.site.urls),
     # API REST FRAMEWORK
     path("accounts/", include("accounts.api.urls", "Accounts API")),
