@@ -6,3 +6,6 @@ class MissingMailConfirmationError(Exception):
 
     detail = "You must confirm your email before attempting to login."
     status_code = status.HTTP_418_IM_A_TEAPOT
+
+    def __str__(self):
+        return self.detail

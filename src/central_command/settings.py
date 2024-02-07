@@ -14,10 +14,10 @@ import os
 
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urljoin
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -30,9 +30,6 @@ DEBUG = bool(os.environ.get("DJANGO_DEBUG", default="1"))
 
 ALLOWED_HOSTS = ["*"] if DEBUG else ["localhost", "127.0.0.1"]
 
-
-# Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -41,11 +38,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
-    "django_email_verification",
     "rest_framework",
     "knox",
+    "post_office",
     "accounts",
     "persistence",
+    "drf_spectacular",
 ]
 
 # What user model to use for authentication?
@@ -83,7 +81,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "central_command.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
@@ -99,10 +96,28 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": ["knox.auth.TokenAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
+    "EXCEPTION_HANDLER": "commons.error_response.custom_exception_handler",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Central Command",
+    "DESCRIPTION": """
+The all-in-one backend application for Unitystation
+
+Features
+* Account management and user validation.
+* Server list management.
+* In-game persistence.
+* Works cross-fork!
+* Modular architecture.
+    """,
+    "VERSION": None,
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 # Token expiration
@@ -113,20 +128,16 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = os.environ.get("EMAIL_HOST")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 1337))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+DEFAULT_FROM_EMAI = EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = "post_office.EmailBackend"
 REQUIRE_EMAIL_CONFIRMATION = True
 
-# Email confirmation settings
-EMAIL_ACTIVE_FIELD = "is_active"
-EMAIL_SERVER = os.environ.get("EMAIL_HOST")
-EMAIL_ADDRESS = os.environ.get("EMAIL_HOST_USER")
-EMAIL_FROM_ADDRESS = os.environ.get("EMAIL_HOST_USER")
-EMAIL_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-EMAIL_MAIL_SUBJECT = "Confirm your Unitystation account"
-EMAIL_MAIL_HTML = "registration/confirmation_email.html"
-EMAIL_PAGE_TEMPLATE = "confirm_template.html"
-EMAIL_PAGE_DOMAIN = os.environ.get("EMAIL_PAGE_DOMAIN")
+POST_OFFICE = {
+    "BACKENDS": {
+        "default": "django.core.mail.backends.smtp.EmailBackend",
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -146,7 +157,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
@@ -159,7 +169,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
@@ -177,4 +186,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Whitenoise statics compression and caching
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-PASS_RESET_LINK = "https://unitystation.org/reset-password/"
+# Website configuration
+WEBSITE_URL = os.environ.get("WEBSITE_URL")
+
+PASS_RESET_URL_SUFFIX = os.environ.get("PASS_RESET_URL_SUFFIX")
+PASS_RESET_URL = urljoin(WEBSITE_URL, PASS_RESET_URL_SUFFIX)
+PASS_RESET_TOKEN_TTL = 60  # minutes
+
+ACCOUNT_CONFIRMATION_URL_SUFFIX = os.environ.get("ACCOUNT_CONFIRMATION_URL_SUFFIX")
+ACCOUNT_CONFIRMATION_URL = urljoin(WEBSITE_URL, ACCOUNT_CONFIRMATION_URL_SUFFIX)
+ACCOUNT_CONFIRMATION_TOKEN_TTL = 24  # hours

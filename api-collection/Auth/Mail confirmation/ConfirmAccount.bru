@@ -1,0 +1,11 @@
+meta {
+  name: ConfirmAccount
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/accounts/confirm-account/<token you get via email here>
+  body: none
+  auth: none
+}

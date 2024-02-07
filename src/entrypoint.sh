@@ -21,6 +21,9 @@ then
     echo "PostgreSQL started"
 fi
 
+# start cron
+crond -l 0 -d 0 -L /home/website/logs/cron.log
+
 # flush all data in the database
 #python manage.py flush --no-input
 

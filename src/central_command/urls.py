@@ -15,11 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from django_email_verification import urls as mail_urls
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
 urlpatterns = [
+    path("", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("admin/", admin.site.urls),
-    path("email/", include(mail_urls)),
     # API REST FRAMEWORK
     path("accounts/", include("accounts.api.urls", "Accounts API")),
     path("persistence/", include("persistence.api.urls")),

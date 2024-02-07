@@ -1,55 +1,64 @@
+import logging
+
+from urllib.parse import urljoin
 from uuid import uuid4
 
-from central_command import settings
+from commons.error_response import ErrorResponse
+from commons.mail_wrapper import send_email_with_template
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.core.mail import EmailMessage
-from django.template.loader import render_to_string
+from drf_spectacular.utils import extend_schema
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, RetrieveAPIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
+from rest_framework.views import APIView
 
 from ..exceptions import MissingMailConfirmationError
 from ..models import Account
 from .serializers import (
+    ConfirmAccountSerializer,
     LoginWithCredentialsSerializer,
     PasswordResetRequestModel,
     PublicAccountDataSerializer,
     RegisterAccountSerializer,
+    ResendAccountSerializer,
     ResetPasswordRequestSerializer,
     ResetPasswordSerializer,
     UpdateAccountSerializer,
     VerifyAccountSerializer,
 )
 
-
-class PublicAccountDataView(RetrieveAPIView):
-    permission_classes = (AllowAny,)
-    queryset = Account.objects.all()
-    serializer_class = PublicAccountDataSerializer
+logger = logging.getLogger(__name__)
 
 
 class LoginWithTokenView(KnoxLoginView):
+    """
+    Login by providing a token in the header of the request, Example: 'Authorization: Token <token>'.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
+    serializer_class = None
 
     def post(self, request, format=None):
         if request.auth is None:
-            return Response(
-                {"detail": "Invalid token."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+            return ErrorResponse("Invalid token", status.HTTP_401_UNAUTHORIZED)
 
         return super().post(request, format=None)
 
     def get_post_response_data(self, request, token, instance):
+        user: Account = request.user
+
         try:
-            if not request.user.is_active:
+            if not user.is_confirmed:
                 raise MissingMailConfirmationError()
         except MissingMailConfirmationError as e:
-            return {"error": e.detail}
+            return ErrorResponse(str(e), MissingMailConfirmationError.status_code)
 
         serializer = self.get_user_serializer_class()
 
@@ -63,27 +72,30 @@ class LoginWithTokenView(KnoxLoginView):
 
 
 class LoginWithCredentialsView(GenericAPIView):
+    """
+    Login by providing email and password.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = LoginWithCredentialsSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
+
         try:
             serializer.is_valid(raise_exception=True)
             account = Account.objects.get(email=serializer.data["email"])
             if not account.is_active:
                 raise MissingMailConfirmationError()
         except ObjectDoesNotExist:
-            return Response(
-                data={"error": "account doesn't exist!"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return ErrorResponse("Account does not exist.", status.HTTP_404_NOT_FOUND)
         except MissingMailConfirmationError as e:
-            return Response(data={"error": e.detail}, status=e.status_code)
+            return ErrorResponse(str(e), status.HTTP_400_BAD_REQUEST)
         except ValidationError as e:
-            return Response(data={"error": e.detail}, status=e.status_code)
-        except Exception as e:
-            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return ErrorResponse(str(e), status.HTTP_400_BAD_REQUEST)
+
         account = serializer.validated_data
 
         return Response(
@@ -96,6 +108,12 @@ class LoginWithCredentialsView(GenericAPIView):
 
 
 class RegisterAccountView(GenericAPIView):
+    """
+    Register a new account.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = RegisterAccountSerializer
 
@@ -105,8 +123,7 @@ class RegisterAccountView(GenericAPIView):
             serializer.is_valid(raise_exception=True)
         except ValidationError as e:
             return Response(data={"error": str(e)}, status=e.status_code)
-        except Exception as e:
-            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         account = serializer.save()
 
         return Response(
@@ -119,6 +136,12 @@ class RegisterAccountView(GenericAPIView):
 
 
 class UpdateAccountView(GenericAPIView):
+    """
+    Update your account data.
+
+    **Requires Token authentication**
+    """
+
     serializer_class = UpdateAccountSerializer
 
     def post(self, request):
@@ -127,38 +150,39 @@ class UpdateAccountView(GenericAPIView):
             if request.user != account:
                 raise PermissionDenied
         except ObjectDoesNotExist:
-            return Response({"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND)
+            return ErrorResponse("Account does not exist.", status.HTTP_404_NOT_FOUND)
         except PermissionDenied:
-            return Response(
-                {"error": "You have no permission to do this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            return ErrorResponse("You have no permission to do this action.", status.HTTP_403_FORBIDDEN)
 
         serializer = self.get_serializer(account, data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
         except ValidationError as e:
-            return Response(data={"error": str(e)}, status=e.status_code)
-        except Exception as e:
-            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return ErrorResponse(str(e), e.status_code)
+
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class RequestVerificationTokenView(GenericAPIView):
-    def get(self, *args, **kwargs):
+class RequestVerificationTokenView(APIView):
+    """
+    Request a new verification token to verify your account in-game.
+
+    **Requires Token authentication**
+    """
+
+    def post(self, *args, **kwargs):
         verification_token = uuid4()
+
         try:
             account = Account.objects.get(pk=self.request.user.pk)
             if self.request.user != account:
                 raise PermissionDenied
         except ObjectDoesNotExist:
-            return Response({"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND)
+            return ErrorResponse("Account does not exist.", status.HTTP_404_NOT_FOUND)
         except PermissionDenied:
-            return Response(
-                {"error": "You have no permission to do this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            return ErrorResponse("You have no permission to do this action.", status.HTTP_403_FORBIDDEN)
+
         account.verification_token = verification_token
         account.save()
         return Response(
@@ -171,17 +195,22 @@ class RequestVerificationTokenView(GenericAPIView):
 
 
 class VerifyAccountView(GenericAPIView):
+    """
+    Given a verification token, verify the account.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = VerifyAccountSerializer
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
+
         try:
             serializer.is_valid(raise_exception=True)
         except ValidationError as e:
-            return Response(data={"error": str(e)}, status=e.status_code)
-        except Exception as e:
-            return Response(data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return ErrorResponse(str(e), e.status_code)
 
         account = Account.objects.get(unique_identifier=serializer.data["unique_identifier"])
         public_data = PublicAccountDataSerializer(account).data
@@ -189,51 +218,130 @@ class VerifyAccountView(GenericAPIView):
         return Response(public_data, status=status.HTTP_200_OK)
 
 
+@extend_schema(operation_id="accounts_reset_password_<token>_create")
 class ResetPasswordView(GenericAPIView):
+    """
+    Given a reset token and new password, reset the account's password.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = ResetPasswordSerializer
 
     def post(self, request, reset_token):
         serializer = self.serializer_class(data=request.data)
-        try:
-            if serializer.is_valid(raise_exception=True):
-                reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
-                if not reset_request.is_token_valid():
-                    raise PasswordResetRequestModel.DoesNotExist
-                account = reset_request.account
-                account.set_password(serializer.validated_data["password"])
-                account.save()
-                reset_request.delete()
-                return Response(data={"detail": "Changed password succesfully"}, status=status.HTTP_200_OK)
-        except PasswordResetRequestModel.DoesNotExist:
-            return Response({"error": "Invalid link or expired."}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"detail": "Operation Done."}, status=status.HTTP_200_OK)
+        try:
+            serializer.is_valid(raise_exception=True)
+            reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
+            if not reset_request.is_token_valid():
+                raise PasswordResetRequestModel.DoesNotExist
+        except ValidationError as e:
+            return ErrorResponse(str(e), e.status_code)
+        except PasswordResetRequestModel.DoesNotExist:
+            return ErrorResponse("Invalid link or expired.", status.HTTP_400_BAD_REQUEST)
+
+        account = reset_request.account
+        account.set_password(serializer.validated_data["password"])
+        account.save()
+        reset_request.delete()
+        return Response(status=status.HTTP_200_OK)
 
 
 class RequestPasswordResetView(GenericAPIView):
+    """
+    Request a password reset link for a given mail.
+
+    **Public endpoint**
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = ResetPasswordRequestSerializer
 
-    def send_email(self, recipient: str, context: dict) -> None:
-        email_subject = "Unitystation: Password Reset Request"
-        email_body = render_to_string("password_reset.html", context)
-
-        email = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, [recipient])
-        email.content_subtype = "html"
-        email.send()
-
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
+
         try:
             serializer.is_valid(raise_exception=True)
         except ValidationError:
-            # Don't tell the user about the error, just move on.
-            return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
+            logger.warning(
+                "Attempted to reset password for non-existing account: %s", serializer.validated_data["email"]
+            )
+            return Response(status=status.HTTP_200_OK)
 
         serializer.save()
-        self.send_email(
+        link = urljoin(settings.PASS_RESET_URL, serializer.validated_data["token"])
+
+        send_email_with_template(
             recipient=serializer.validated_data["account"].email,
-            context={"link": f"{settings.PASS_RESET_LINK}{serializer.validated_data['token']}"},
+            subject="Reset your password",
+            template="password_reset.html",
+            context={"link": link},
         )
-        return Response(data={"detail": "Operation Done."}, status=status.HTTP_200_OK)
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class ConfirmAccountView(GenericAPIView):
+    """
+    Given a confirmation token, confirm the account.
+
+    **Public endpoint**
+    """
+
+    permission_classes = (AllowAny,)
+    serializer_class = ConfirmAccountSerializer
+
+    def post(self, request, confirm_token):
+        serializer = self.serializer_class(data={"token": confirm_token})
+        print(serializer)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            return ErrorResponse(str(e), e.status_code)
+
+        account_id = serializer.validated_data.account.unique_identifier
+
+        try:
+            account = Account.objects.get(unique_identifier=account_id)
+        except Account.DoesNotExist:
+            return ErrorResponse("Account for this confirmation link does not exist.", status.HTTP_400_BAD_REQUEST)
+
+        account.is_active = True
+        account.is_confirmed = True
+        account.save()
+        serializer.validated_data.delete()
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class ResendAccountConfirmationView(GenericAPIView):
+    """
+    Resend the confirmation mail for a given account.
+
+    **Public endpoint**
+    """
+
+    permission_classes = (AllowAny,)
+    serializer_class = ResendAccountSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            return ErrorResponse(str(e), e.status_code)
+        except Account.DoesNotExist:
+            logger.warning(
+                "Attempted to resend account confirmation for non-existing account: %s",
+                serializer.validated_data["email"],
+            )
+            return Response(status=status.HTTP_200_OK)
+
+        account = serializer.validated_data
+        account.send_confirmation_mail()
+
+        return Response(status=status.HTTP_200_OK)
