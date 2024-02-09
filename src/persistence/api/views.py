@@ -22,7 +22,7 @@ class GetCharacterByIdView(GenericAPIView):
     serializer_class = CharacterSerializer
 
     def get_queryset(self):
-        return Character.objects.filter(account__unique_identifier=self.request.user.unique_identifier)
+        return Character.objects.filter(account__unique_identifier=self.request.user.unique_identifier)  # type: ignore
 
     def get(self, request, pk):
         try:
@@ -169,7 +169,7 @@ class CreateCharacterView(GenericAPIView):
         data_with_account["account"] = request.user.pk
 
         serializer = self.serializer_class(data=data_with_account)
-        serializer.account = request.user
+        serializer.account = request.user  # type: ignore
         try:
             serializer.is_valid(raise_exception=True)
         except ValidationError as e:

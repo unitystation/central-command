@@ -21,6 +21,15 @@ jobs:
             - uses: actions/setup-python@v4
               with:
                   python-version: '3.11'
+            # because pre-commit uses external mypy
+            - name: install mypy
+              run: |
+                  pip install poetry
+                  poetry config virtualenvs.create false
+                  poetry install --only main,typecheck
+            # https://github.com/typeddjango/django-stubs/issues/458
+            - name: create .env file
+              run: cp example.env .env
             - uses: pre-commit/action@v3.0.0
 
     unit_test:
@@ -35,7 +44,9 @@ jobs:
               run: |
                   pip install poetry
                   poetry config virtualenvs.create false
-                  poetry install
+                  poetry install --only main
+            - name: create .env file
+              run: cp example.env .env
             - name: Run tests
               env:
                   SECRET_KEY: secret
