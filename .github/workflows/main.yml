@@ -44,7 +44,9 @@ jobs:
               run: |
                   pip install poetry
                   poetry config virtualenvs.create false
-                  poetry install
+                  poetry install --only main
+            - name: create .env file
+              run: cp example.env .env
             - name: Run tests
               env:
                   SECRET_KEY: secret
