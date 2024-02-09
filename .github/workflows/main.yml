@@ -26,7 +26,7 @@ jobs:
               run: |
                   pip install poetry
                   poetry config virtualenvs.create false
-                  poetry install --only typecheck
+                  poetry install --only main,typecheck
             # https://github.com/typeddjango/django-stubs/issues/458
             - name: create .env file
               run: cp example.env .env
