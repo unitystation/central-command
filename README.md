@@ -15,16 +15,6 @@ The all-in-one backend application for [Unitystation](https://github.com/unityst
 
 ## Development guide
 
-#### pre-commit
-
-pre-commit is a git hook which runs every time you make a commit to catch linting and formatting errors early.  
-
-```sh
-pre-commit install
-```
-
-> Hint: if the world is on fire, production servers down, clown at your doorstep and you don't have time to make linters happy, add `-n` to `git commit` command (CI will still be mad though).
-
 ### Environment setup
 
 Copy `example.env` to `.env` and customize it. You can then start development by either using docker or running the project locally.
@@ -76,6 +66,16 @@ from the src folder run
 ```sh
 python manage.py runserver
 ```
+
+#### pre-commit
+
+pre-commit is a git hook which runs every time you make a commit to catch linting and formatting errors early.  
+
+```sh
+pre-commit install
+```
+
+> Hint: if the world is on fire, production servers down, clown at your doorstep and you don't have time to make linters happy, add `-n` to `git commit` command (CI will still be mad though).
 
 ### Setting up Docker
 

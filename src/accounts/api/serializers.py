@@ -38,7 +38,7 @@ class LoginWithCredentialsSerializer(serializers.Serializer):
     password = serializers.CharField(style={"input_type": "password"})
 
     def validate(self, data):
-        account = authenticate(username=data["email"], password=data["password"])
+        account: Account | None = authenticate(username=data["email"], password=data["password"])  # type: ignore[assignment]
         if account is None:
             raise serializers.ValidationError("Unable to login with provided credentials.")
         if not account.is_confirmed:
