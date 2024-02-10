@@ -8,6 +8,8 @@ migrations
 [tool.ruff]
 exclude = ["migrations"]
 line-length = 121
+
+[tool.ruff.lint]
 ignore = [
     # doesn't like Optional
     # https://github.com/charliermarsh/ruff/issues/4858
@@ -54,7 +56,7 @@ fixable = [
     "I",
 ]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 combine-as-imports = true
 lines-between-types = 1
 
@@ -99,16 +101,15 @@ django-post-office = "^3.8.0"
 drf-spectacular = "^0.27.1"
 
 [tool.poetry.group.lint.dependencies]
-pre-commit = "3.6.0"
-ruff = "0.1.13"
-black = "24.1.1"
+pre-commit = "3.*"
+ruff = "0.2.*"
+black = "24.*"
 
 # typecheck is separate for CI
 [tool.poetry.group.typecheck.dependencies]
-# django-stubs does not support 1.8 yet
-mypy = "1.7"
-django-stubs = {extras = ["compatible-mypy"], version = "4.2.7"}
-djangorestframework-stubs = {extras = ["compatible-mypy"], version = "3.14.5"}
+mypy = "1.*"
+django-stubs = {extras = ["compatible-mypy"], version = "4.*"}
+djangorestframework-stubs = {extras = ["compatible-mypy"], version = "3.*"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
