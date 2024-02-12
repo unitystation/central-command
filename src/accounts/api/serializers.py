@@ -1,11 +1,8 @@
-import secrets
-
 from django.conf import settings
-from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from ..models import Account, AccountConfirmation, PasswordResetRequestModel
+from ..models import Account, AccountConfirmation
 
 
 class PublicAccountDataSerializer(serializers.ModelSerializer):
@@ -36,16 +33,6 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
 class LoginWithCredentialsSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(style={"input_type": "password"})
-
-    def validate(self, data):
-        account: Account | None = authenticate(username=data["email"], password=data["password"])  # type: ignore[assignment]
-        if account is None:
-            raise serializers.ValidationError("Unable to login with provided credentials.")
-        if not account.is_confirmed:
-            raise serializers.ValidationError(
-                "This account hasn't done the mail confirmation step or has been disabled."
-            )
-        return account
 
 
 class UpdateAccountSerializer(serializers.ModelSerializer):
@@ -85,38 +72,13 @@ class VerifyAccountSerializer(serializers.Serializer):
         return account
 
 
-class ResetPasswordSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Account
-        fields = ("password",)
-        extra_kwargs = {"password": {"write_only": True}}
+class ResetPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(style={"input_type": "password"})
 
     def validate_password(self, value):
         # Validate the password using Django's built-in validators
         validate_password(value)
         return value
-
-
-class ResetPasswordRequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PasswordResetRequestModel
-        fields = ("email",)
-
-    email = serializers.EmailField()
-
-    def validate(self, data):
-        email = data["email"]
-        account = Account.objects.get(email=email)
-        if account is None:
-            raise serializers.ValidationError("Account with this email doesn't exist.")
-
-        return {
-            "token": secrets.token_urlsafe(32),
-            "account": account,
-        }
-
-    def create(self, validated_data):
-        return PasswordResetRequestModel.objects.create(**validated_data)
 
 
 class ConfirmAccountSerializer(serializers.Serializer):
@@ -130,16 +92,8 @@ class ConfirmAccountSerializer(serializers.Serializer):
 
         if not account_confirmation.is_token_valid():
             raise serializers.ValidationError("Token is invalid or expired.")
-        return account_confirmation
+        return {"token": data["token"]}
 
 
-class ResendAccountSerializer(serializers.Serializer):
+class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
-
-    def validate(self, data):
-        email = data["email"]
-        account = Account.objects.get(email=email)
-        if account is None:
-            raise Account.DoesNotExist("Account with this email doesn't exist.")
-
-        return account

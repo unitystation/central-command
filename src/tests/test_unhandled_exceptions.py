@@ -20,5 +20,5 @@ class CustomExceptionHandlerTest(TestCase):
         response = ExceptionView.as_view()(request)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(response.data["error"], "An unhandled error occurred: This is a test exception")
         self.assertIn("error", response.data)
+        self.assertEqual(response.data["error"], "Something went wrong on our end. Please try again later.")

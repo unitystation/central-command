@@ -23,6 +23,6 @@ def custom_exception_handler(exc, context):
     else:
         logger.error("An unhandled error occurred: %s", exc)
         logger.error("Context: %s", context)
-        return ErrorResponse(f"An unhandled error occurred: {exc}")
+        return ErrorResponse("Something went wrong on our end. Please try again later.")
 
     return response

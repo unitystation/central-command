@@ -115,7 +115,7 @@ class AccountConfirmation(models.Model):
     def is_token_valid(self):
         if self.created_at is None:
             return False
-        return (self.created_at + timedelta(minutes=settings.ACCOUNT_CONFIRMATION_TOKEN_TTL)) > timezone.now()
+        return (self.created_at + timedelta(hours=settings.ACCOUNT_CONFIRMATION_TOKEN_TTL)) > timezone.now()
 
 
 class PasswordResetRequestModel(models.Model):
