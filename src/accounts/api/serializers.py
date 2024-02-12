@@ -41,10 +41,7 @@ class LoginWithCredentialsSerializer(serializers.Serializer):
         account: Account | None = authenticate(username=data["email"], password=data["password"])  # type: ignore[assignment]
         if account is None:
             raise serializers.ValidationError("Unable to login with provided credentials.")
-        if not account.is_confirmed:
-            raise serializers.ValidationError(
-                "This account hasn't done the mail confirmation step or has been disabled."
-            )
+
         return account
 
 

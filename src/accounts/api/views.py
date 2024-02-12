@@ -17,7 +17,6 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
 
-from ..exceptions import MissingMailConfirmationError
 from ..models import Account
 from .serializers import (
     ConfirmAccountSerializer,
@@ -54,11 +53,8 @@ class LoginWithTokenView(KnoxLoginView):
     def get_post_response_data(self, request, token, instance):
         user: Account = request.user
 
-        try:
-            if not user.is_confirmed:
-                raise MissingMailConfirmationError()
-        except MissingMailConfirmationError as e:
-            return ErrorResponse(str(e), MissingMailConfirmationError.status_code)
+        if not user.is_confirmed:
+            return ErrorResponse("You must confirm your email before attempting to login.", status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_user_serializer_class()
 
@@ -84,19 +80,15 @@ class LoginWithCredentialsView(GenericAPIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
 
-        try:
-            serializer.is_valid(raise_exception=True)
-            account = Account.objects.get(email=serializer.data["email"])
-            if not account.is_active:
-                raise MissingMailConfirmationError()
-        except ObjectDoesNotExist:
-            return ErrorResponse("Account does not exist.", status.HTTP_404_NOT_FOUND)
-        except MissingMailConfirmationError as e:
-            return ErrorResponse(str(e), status.HTTP_400_BAD_REQUEST)
-        except ValidationError as e:
-            return ErrorResponse(str(e), status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
         account = serializer.validated_data
+        if not account.is_confirmed:
+            return ErrorResponse("You must confirm your email before attempting to login.", status.HTTP_400_BAD_REQUEST)
+
+        if not account.is_active:
+            return ErrorResponse("Account is suspended.", status.HTTP_400_BAD_REQUEST)
 
         return Response(
             {
