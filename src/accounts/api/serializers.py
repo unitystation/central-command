@@ -135,11 +135,3 @@ class ConfirmAccountSerializer(serializers.Serializer):
 
 class ResendAccountSerializer(serializers.Serializer):
     email = serializers.EmailField()
-
-    def validate(self, data):
-        email = data["email"]
-        account = Account.objects.get(email=email)
-        if account is None:
-            raise Account.DoesNotExist("Account with this email doesn't exist.")
-
-        return account
