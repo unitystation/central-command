@@ -127,7 +127,7 @@ class ConfirmAccountSerializer(serializers.Serializer):
 
         if not account_confirmation.is_token_valid():
             raise serializers.ValidationError("Token is invalid or expired.")
-        return account_confirmation
+        return {"token": data["token"]}
 
 
 class ResendAccountSerializer(serializers.Serializer):

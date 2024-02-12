@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
 
-from ..models import Account
+from ..models import Account, AccountConfirmation
 from .serializers import (
     ConfirmAccountSerializer,
     LoginWithCredentialsSerializer,
@@ -291,14 +291,9 @@ class ConfirmAccountView(GenericAPIView):
         except ValidationError as e:
             return ErrorResponse(str(e), e.status_code)
 
-        account_id = serializer.validated_data.account.unique_identifier
+        account_confirmation = AccountConfirmation.objects.get(token=serializer.validated_data["token"])
+        account = account_confirmation.account
 
-        try:
-            account = Account.objects.get(unique_identifier=account_id)
-        except Account.DoesNotExist:
-            return ErrorResponse("Account for this confirmation link does not exist.", status.HTTP_400_BAD_REQUEST)
-
-        account.is_active = True
         account.is_confirmed = True
         account.save()
         serializer.validated_data.delete()
