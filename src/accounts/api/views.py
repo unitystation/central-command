@@ -1,4 +1,5 @@
 import logging
+import secrets
 
 from urllib.parse import urljoin
 from uuid import uuid4
@@ -17,15 +18,13 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
 
-from ..models import Account, AccountConfirmation
+from ..models import Account, AccountConfirmation, PasswordResetRequestModel
 from .serializers import (
     ConfirmAccountSerializer,
+    EmailSerializer,
     LoginWithCredentialsSerializer,
-    PasswordResetRequestModel,
     PublicAccountDataSerializer,
     RegisterAccountSerializer,
-    ResendAccountSerializer,
-    ResetPasswordRequestSerializer,
     ResetPasswordSerializer,
     UpdateAccountSerializer,
     VerifyAccountSerializer,
@@ -221,20 +220,21 @@ class ResetPasswordView(GenericAPIView):
     def post(self, request, reset_token):
         serializer = self.serializer_class(data=request.data)
 
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
         try:
-            serializer.is_valid(raise_exception=True)
-            reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
-            if not reset_request.is_token_valid():
+            reset_token = PasswordResetRequestModel.objects.get(token=reset_token)
+            if not reset_token.is_token_valid():
                 raise PasswordResetRequestModel.DoesNotExist
-        except ValidationError as e:
-            return ErrorResponse(str(e), e.status_code)
         except PasswordResetRequestModel.DoesNotExist:
             return ErrorResponse("Invalid link or expired.", status.HTTP_400_BAD_REQUEST)
 
-        account = reset_request.account
+        account = reset_token.account
         account.set_password(serializer.validated_data["password"])
         account.save()
-        reset_request.delete()
+        reset_token.delete()
+
         return Response(status=status.HTTP_200_OK)
 
 
@@ -246,24 +246,29 @@ class RequestPasswordResetView(GenericAPIView):
     """
 
     permission_classes = (AllowAny,)
-    serializer_class = ResetPasswordRequestSerializer
+    serializer_class = EmailSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
 
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
         try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError:
+            account = Account.objects.get(email=serializer.validated_data["email"])
+        except Account.DoesNotExist:
             logger.warning(
                 "Attempted to reset password for non-existing account: %s", serializer.validated_data["email"]
             )
             return Response(status=status.HTTP_200_OK)
 
-        serializer.save()
-        link = urljoin(settings.PASS_RESET_URL, serializer.validated_data["token"])
+        token = secrets.token_urlsafe(32)
+        PasswordResetRequestModel.objects.create(account=account, token=token)
+
+        link = urljoin(settings.PASS_RESET_URL, token)
 
         send_email_with_template(
-            recipient=serializer.validated_data["account"].email,
+            recipient=account.email,
             subject="Reset your password",
             template="password_reset.html",
             context={"link": link},
@@ -295,8 +300,8 @@ class ConfirmAccountView(GenericAPIView):
         account = account_confirmation.account
 
         account.is_confirmed = True
+        account_confirmation.delete()
         account.save()
-        serializer.validated_data.delete()
 
         return Response(status=status.HTTP_200_OK)
 
@@ -309,10 +314,10 @@ class ResendAccountConfirmationView(GenericAPIView):
     """
 
     permission_classes = (AllowAny,)
-    serializer_class = ResendAccountSerializer
+    serializer_class = EmailSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer: ResendAccountSerializer = self.serializer_class(data=request.data)
+        serializer: EmailSerializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
             email = serializer.validated_data["email"]
