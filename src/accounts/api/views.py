@@ -111,17 +111,14 @@ class RegisterAccountView(GenericAPIView):
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            return Response(data={"error": str(e)}, status=e.status_code)
+
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
         account = serializer.save()
-
         return Response(
             {
-                "account": RegisterAccountSerializer(account, context=self.get_serializer_context()).data,
-                "token": AuthToken.objects.create(account)[1],
+                "account": PublicAccountDataSerializer(account, context=self.get_serializer_context()).data,
             },
             status=status.HTTP_200_OK,
         )
