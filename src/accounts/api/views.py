@@ -327,21 +327,22 @@ class ResendAccountConfirmationView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ResendAccountSerializer
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+    def post(self, request, *args, **kwargs):
+        serializer: ResendAccountSerializer = self.serializer_class(data=request.data)
 
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            return ErrorResponse(str(e), e.status_code)
-        except Account.DoesNotExist:
-            logger.warning(
-                "Attempted to resend account confirmation for non-existing account: %s",
-                serializer.validated_data["email"],
-            )
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            try:
+                account = Account.objects.get(email=email)
+            except Account.DoesNotExist:
+                logger.warning("Attempted to resend confirmation mail for non-existing account: %s", email)
+                return Response(status=status.HTTP_200_OK)
+
+            if account.is_confirmed:
+                logger.warning("Attempted to resend confirmation mail for already confirmed account: %s", email)
+                return Response(status=status.HTTP_200_OK)
+
+            account.send_confirmation_mail()
             return Response(status=status.HTTP_200_OK)
-
-        account = serializer.validated_data
-        account.send_confirmation_mail()
-
-        return Response(status=status.HTTP_200_OK)
+        else:
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
