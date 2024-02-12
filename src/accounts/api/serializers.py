@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
@@ -34,13 +33,6 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
 class LoginWithCredentialsSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(style={"input_type": "password"})
-
-    def validate(self, data):
-        account: Account | None = authenticate(username=data["email"], password=data["password"])  # type: ignore[assignment]
-        if account is None:
-            raise serializers.ValidationError("Unable to login with provided credentials.")
-
-        return account
 
 
 class UpdateAccountSerializer(serializers.ModelSerializer):

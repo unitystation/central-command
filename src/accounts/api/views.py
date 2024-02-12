@@ -7,6 +7,7 @@ from uuid import uuid4
 from commons.error_response import ErrorResponse
 from commons.mail_wrapper import send_email_with_template
 from django.conf import settings
+from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from drf_spectacular.utils import extend_schema
 from knox.models import AuthToken
@@ -82,7 +83,14 @@ class LoginWithCredentialsView(GenericAPIView):
         if not serializer.is_valid():
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-        account = serializer.validated_data
+        email = serializer.validated_data["email"]
+        password = serializer.validated_data["password"]
+
+        account: Account | None = authenticate(email=email, password=password)  # type: ignore[assignment]
+
+        if account is None:
+            return ErrorResponse("Unable to login with provided credentials.", status.HTTP_400_BAD_REQUEST)
+
         if not account.is_confirmed:
             return ErrorResponse("You must confirm your email before attempting to login.", status.HTTP_400_BAD_REQUEST)
 
