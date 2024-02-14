@@ -17,21 +17,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Other',
-            fields=[
-                ('account', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='accounts.account')),
-                ('other_data', models.JSONField(default=dict)),
-            ],
-        ),
-        migrations.CreateModel(
-            name='PolyPhrase',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('said_by', models.CharField(blank=True, default='Who knows?', max_length=28)),
-                ('phrase', models.CharField(max_length=128)),
-            ],
-        ),
-        migrations.CreateModel(
             name='Character',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
