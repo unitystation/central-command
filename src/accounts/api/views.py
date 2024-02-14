@@ -167,7 +167,7 @@ class RequestVerificationTokenView(APIView):
     **Requires Token authentication**
     """
 
-    def post(self, *args, **kwargs):
+    def get(self, *args, **kwargs):
         verification_token = uuid4()
 
         try:
