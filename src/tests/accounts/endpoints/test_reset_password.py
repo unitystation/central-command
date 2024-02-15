@@ -1,4 +1,4 @@
-from accounts.models import Account, PasswordResetRequestModel  # type: ignore
+from accounts.models import Account, PasswordResetRequestModel
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase

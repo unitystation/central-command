@@ -25,7 +25,7 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
     def validate_password(self, value):
         # Validate the password using Django's built-in validators
         temp_user = Account(**self.initial_data)
-        validate_password(value, temp_user)  # type: ignore
+        validate_password(value, temp_user)
         return value
 
     def create(self, validated_data):
@@ -72,7 +72,7 @@ class ResetPasswordSerializer(serializers.Serializer):
     def validate_password(self, value):
         # Validate the password using Django's built-in validators
         temp_user = Account(**self.initial_data)
-        validate_password(value, temp_user)  # type: ignore
+        validate_password(value, temp_user)
         return value
 
 

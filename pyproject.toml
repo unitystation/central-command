@@ -63,6 +63,7 @@ lines-between-types = 1
 [tool.mypy]
 show_column_numbers = true
 show_error_codes = true
+warn_unused_ignores = true
 
 # XXX: add new rules here
 check_untyped_defs = true

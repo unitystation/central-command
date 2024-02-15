@@ -1,4 +1,4 @@
-from accounts.models import Account  # type: ignore
+from accounts.models import Account
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
