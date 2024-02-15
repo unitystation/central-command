@@ -22,6 +22,12 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
         fields = ("unique_identifier", "username", "password", "email")
         extra_kwargs = {"password": {"write_only": True}}
 
+    def validate_password(self, value):
+        # Validate the password using Django's built-in validators
+        temp_user = Account(**self.initial_data)
+        validate_password(value, temp_user)  # type: ignore
+        return value
+
     def create(self, validated_data):
         """Create and return a new account"""
         account: Account = Account.objects.create_user(**validated_data)
@@ -59,25 +65,14 @@ class VerifyAccountSerializer(serializers.Serializer):
     unique_identifier = serializers.CharField()
     verification_token = serializers.UUIDField()
 
-    def validate(self, data):
-        account = Account.objects.get(unique_identifier=data["unique_identifier"])
-
-        data_token = data["verification_token"]
-        account_token = account.verification_token
-
-        if account_token != data_token:
-            raise serializers.ValidationError(
-                "Verification token seems invalid or maybe outdated. Try requesting a new one."
-            )
-        return account
-
 
 class ResetPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(style={"input_type": "password"})
 
     def validate_password(self, value):
         # Validate the password using Django's built-in validators
-        validate_password(value)
+        temp_user = Account(**self.initial_data)
+        validate_password(value, temp_user)  # type: ignore
         return value
 
 
