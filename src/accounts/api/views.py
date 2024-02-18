@@ -4,8 +4,6 @@ import secrets
 from urllib.parse import urljoin
 from uuid import uuid4
 
-from commons.error_response import ErrorResponse
-from commons.mail_wrapper import send_email_with_template
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
@@ -18,6 +16,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
+
+from commons.error_response import ErrorResponse
+from commons.mail_wrapper import send_email_with_template
 
 from ..models import Account, AccountConfirmation, PasswordResetRequestModel
 from .serializers import (

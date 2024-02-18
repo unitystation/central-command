@@ -1,7 +1,8 @@
-from accounts.models import Account
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from accounts.models import Account
 
 
 class RegisterTest(APITestCase):

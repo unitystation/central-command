@@ -1,5 +1,6 @@
-from accounts.validators import IDENTIFIER_REGEX, USERNAME_REGEX
 from django.test import TestCase
+
+from accounts.validators import IDENTIFIER_REGEX, USERNAME_REGEX
 
 
 class IdentifierRegexTest(TestCase):
