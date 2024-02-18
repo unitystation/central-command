@@ -22,6 +22,8 @@ ignore = [
     "RUF012",
     # treats a link with the word "password" in it as a hardcoded password
     "S105",
+    # the limit is too low and dumb. We don't use squared monitors anymore
+    "E501",
 ]
 select = [
     # pyflakes
