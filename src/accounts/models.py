@@ -3,11 +3,12 @@ from secrets import token_urlsafe
 from urllib.parse import urljoin
 from uuid import uuid4
 
-from commons.mail_wrapper import send_email_with_template
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+
+from commons.mail_wrapper import send_email_with_template
 
 from .validators import AccountNameValidator, UsernameValidator
 

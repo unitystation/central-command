@@ -4,8 +4,6 @@ import secrets
 from urllib.parse import urljoin
 from uuid import uuid4
 
-from commons.error_response import ErrorResponse
-from commons.mail_wrapper import send_email_with_template
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
@@ -18,6 +16,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
+
+from commons.error_response import ErrorResponse
+from commons.mail_wrapper import send_email_with_template
 
 from ..models import Account, AccountConfirmation, PasswordResetRequestModel
 from .serializers import (
@@ -89,13 +90,13 @@ class LoginWithCredentialsView(GenericAPIView):
         account: Account | None = authenticate(email=email, password=password)  # type: ignore[assignment]
 
         if account is None:
-            return ErrorResponse("Unable to login with provided credentials.", status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse("Unable to login with provided credentials.", status.HTTP_401_UNAUTHORIZED)
 
         if not account.is_confirmed:
-            return ErrorResponse("You must confirm your email before attempting to login.", status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse("You must confirm your email before attempting to login.", status.HTTP_401_UNAUTHORIZED)
 
         if not account.is_active:
-            return ErrorResponse("Account is suspended.", status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse("Account is suspended.", status.HTTP_401_UNAUTHORIZED)
 
         return Response(
             {
@@ -203,12 +204,17 @@ class VerifyAccountView(GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
 
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            return ErrorResponse(str(e), e.status_code)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-        account = Account.objects.get(unique_identifier=serializer.data["unique_identifier"])
+        try:
+            account = Account.objects.get(unique_identifier=serializer.validated_data["unique_identifier"])
+        except Account.DoesNotExist:
+            return ErrorResponse("Either token or unique_identifier are invalid.", status.HTTP_400_BAD_REQUEST)
+
+        if account.verification_token != serializer.validated_data["verification_token"]:
+            return ErrorResponse("Either token or unique_identifier are invalid.", status.HTTP_400_BAD_REQUEST)
+
         public_data = PublicAccountDataSerializer(account).data
 
         return Response(public_data, status=status.HTTP_200_OK)

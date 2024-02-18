@@ -162,6 +162,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
+    {
+        "NAME": "accounts.custom_attribute_similarity_validator.CustomUserAttributeSimilarityValidator",
+    },
 ]
 
 # Internationalization

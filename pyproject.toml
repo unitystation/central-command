@@ -22,6 +22,8 @@ ignore = [
     "RUF012",
     # treats a link with the word "password" in it as a hardcoded password
     "S105",
+    # the limit is too low and dumb. We don't use squared monitors anymore
+    "E501",
 ]
 select = [
     # pyflakes
@@ -59,6 +61,12 @@ fixable = [
 [tool.ruff.lint.isort]
 combine-as-imports = true
 lines-between-types = 1
+known-first-party = [
+    "accounts",
+    "central_command",
+    "commons",
+    "persistence",
+]
 
 [tool.mypy]
 show_column_numbers = true
@@ -66,6 +74,7 @@ show_error_codes = true
 
 # XXX: add new rules here
 check_untyped_defs = true
+warn_unused_ignores = true
 
 plugins = [
     "mypy_django_plugin.main",
