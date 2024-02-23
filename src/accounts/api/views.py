@@ -318,7 +318,7 @@ class ConfirmAccountView(GenericAPIView):
     serializer_class = ConfirmAccountSerializer
 
     def post(self, request):
-        serializer = self.serializer_class(data={request.data})
+        serializer = self.serializer_class(data=request.data)
 
         if not serializer.is_valid():
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
