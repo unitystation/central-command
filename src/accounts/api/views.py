@@ -55,7 +55,10 @@ class LoginWithTokenView(KnoxLoginView):
         user: Account = request.user
 
         if not user.is_confirmed:
-            return ErrorResponse("You must confirm your email before attempting to login.", status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse(
+                "You must confirm your email before attempting to login.",
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         serializer = self.get_user_serializer_class()
 
@@ -90,10 +93,16 @@ class LoginWithCredentialsView(GenericAPIView):
         account: Account | None = authenticate(email=email, password=password)  # type: ignore[assignment]
 
         if account is None:
-            return ErrorResponse("Unable to login with provided credentials.", status.HTTP_401_UNAUTHORIZED)
+            return ErrorResponse(
+                "Unable to login with provided credentials.",
+                status.HTTP_401_UNAUTHORIZED,
+            )
 
         if not account.is_confirmed:
-            return ErrorResponse("You must confirm your email before attempting to login.", status.HTTP_401_UNAUTHORIZED)
+            return ErrorResponse(
+                "You must confirm your email before attempting to login.",
+                status.HTTP_401_UNAUTHORIZED,
+            )
 
         if not account.is_active:
             return ErrorResponse("Account is suspended.", status.HTTP_401_UNAUTHORIZED)
@@ -210,10 +219,16 @@ class VerifyAccountView(GenericAPIView):
         try:
             account = Account.objects.get(unique_identifier=serializer.validated_data["unique_identifier"])
         except Account.DoesNotExist:
-            return ErrorResponse("Either token or unique_identifier are invalid.", status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse(
+                "Either token or unique_identifier are invalid.",
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         if account.verification_token != serializer.validated_data["verification_token"]:
-            return ErrorResponse("Either token or unique_identifier are invalid.", status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse(
+                "Either token or unique_identifier are invalid.",
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         public_data = PublicAccountDataSerializer(account).data
 
@@ -272,7 +287,8 @@ class RequestPasswordResetView(GenericAPIView):
             account = Account.objects.get(email=serializer.validated_data["email"])
         except Account.DoesNotExist:
             logger.warning(
-                "Attempted to reset password for non-existing account: %s", serializer.validated_data["email"]
+                "Attempted to reset password for non-existing account: %s",
+                serializer.validated_data["email"],
             )
             return Response(status=status.HTTP_200_OK)
 
@@ -301,14 +317,11 @@ class ConfirmAccountView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ConfirmAccountSerializer
 
-    def post(self, request, confirm_token):
-        serializer = self.serializer_class(data={"token": confirm_token})
-        print(serializer)
+    def post(self, request):
+        serializer = self.serializer_class(data={request.data})
 
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            return ErrorResponse(str(e), e.status_code)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
         account_confirmation = AccountConfirmation.objects.get(token=serializer.validated_data["token"])
         account = account_confirmation.account
@@ -338,11 +351,17 @@ class ResendAccountConfirmationView(GenericAPIView):
             try:
                 account = Account.objects.get(email=email)
             except Account.DoesNotExist:
-                logger.warning("Attempted to resend confirmation mail for non-existing account: %s", email)
+                logger.warning(
+                    "Attempted to resend confirmation mail for non-existing account: %s",
+                    email,
+                )
                 return Response(status=status.HTTP_200_OK)
 
             if account.is_confirmed:
-                logger.warning("Attempted to resend confirmation mail for already confirmed account: %s", email)
+                logger.warning(
+                    "Attempted to resend confirmation mail for already confirmed account: %s",
+                    email,
+                )
                 return Response(status=status.HTTP_200_OK)
 
             account.send_confirmation_mail()
