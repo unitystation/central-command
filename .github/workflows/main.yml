@@ -53,6 +53,7 @@ jobs:
                   DB_ENGINE: django.db.backends.sqlite3
               run: |
                   cd src
+                  python manage.py makemigrations --check
                   python manage.py migrate
                   python manage.py test tests/
 
