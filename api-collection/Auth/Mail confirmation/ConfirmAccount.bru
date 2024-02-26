@@ -5,7 +5,13 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/accounts/confirm-account/<token you get via email here>
-  body: none
+  url: {{baseUrl}}/accounts/confirm-account
+  body: json
   auth: none
+}
+
+body:json {
+  {
+    "token": "asdasdasdasdasd"
+  }
 }
