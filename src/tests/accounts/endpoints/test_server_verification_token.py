@@ -49,7 +49,6 @@ class ServerVerificationTokenTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_verify_with_invalid_token(self):
-
         data = {"verification_token": "invalidToken", "unique_identifier": self.valid_account.unique_identifier}
         response = self.client.post(self.url_verify, data, format="json")
 
