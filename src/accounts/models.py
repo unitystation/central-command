@@ -5,12 +5,14 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.validators import MinLengthValidator
 from django.db import models
 from django.utils import timezone
 
 from commons.mail_wrapper import send_email_with_template
 
-from .validators import AccountNameValidator, UsernameValidator
+from .validators import AccountNameValidator
 
 
 class Account(AbstractUser):
@@ -35,7 +37,7 @@ class Account(AbstractUser):
         verbose_name="Public username",
         max_length=28,
         unique=False,
-        validators=[UsernameValidator()],
+        validators=[MinLengthValidator(3), UnicodeUsernameValidator()],
         help_text=(
             "Public username is used to identify your account publicly and shows in "
             "OOC. This can be changed at any time"
