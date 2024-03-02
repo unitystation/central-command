@@ -61,10 +61,11 @@ class LoginWithTokenView(KnoxLoginView):
             )
 
         serializer = self.get_user_serializer_class()
+        data = {
+            "account": serializer(request.user, context=self.get_context()).data,
+            "token": token,
+        }
 
-        data = {"token": token}
-        if serializer is not None:
-            data["user"] = serializer(request.user, context=self.get_context()).data
         return data
 
     def get_user_serializer_class(self):
