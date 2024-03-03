@@ -22,9 +22,12 @@ class RegisterAccountSerializer(serializers.ModelSerializer):
         fields = ("unique_identifier", "username", "password", "email")
         extra_kwargs = {"password": {"write_only": True}}
 
-    def validate_password(self, value):
+    def validate_password(self, value: str):
         # Validate the password using Django's built-in validators
-        temp_user = Account(**self.initial_data)
+        temp_user = Account(
+            unique_identifier=self.initial_data.get("unique_identifier"),
+            username=self.initial_data.get("username"),
+        )
         validate_password(value, temp_user)
         return value
 
@@ -69,9 +72,12 @@ class VerifyAccountSerializer(serializers.Serializer):
 class ResetPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(style={"input_type": "password"})
 
-    def validate_password(self, value):
+    def validate_password(self, value: str):
         # Validate the password using Django's built-in validators
-        temp_user = Account(**self.initial_data)
+        temp_user = Account(
+            unique_identifier=self.initial_data.get("unique_identifier"),
+            username=self.initial_data.get("username"),
+        )
         validate_password(value, temp_user)
         return value
 
@@ -83,10 +89,10 @@ class ConfirmAccountSerializer(serializers.Serializer):
         try:
             account_confirmation = AccountConfirmation.objects.get(token=data["token"])
         except AccountConfirmation.DoesNotExist:
-            raise serializers.ValidationError("Token is invalid or expired.")
+            raise serializers.ValidationError({"token": "Token is invalid or expired."})
 
         if not account_confirmation.is_token_valid():
-            raise serializers.ValidationError("Token is invalid or expired.")
+            raise serializers.ValidationError({"token": "Token is invalid or expired."})
         return {"token": data["token"]}
 
 
