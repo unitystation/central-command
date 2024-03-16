@@ -28,12 +28,13 @@ class PasswordResetRequestInline(admin.TabularInline):
 @admin.register(Account)
 class AccountAdminView(admin.ModelAdmin):
     list_display = (
-        "email",
-        "is_active",
         "unique_identifier",
+        "email",
         "username",
         "is_confirmed",
         "is_verified",
+        "is_active",
+        "is_staff",
         "legacy_id",
     )
     fieldsets = (
@@ -57,6 +58,7 @@ class AccountAdminView(admin.ModelAdmin):
                     "is_active",
                     "is_confirmed",
                     "is_verified",
+                    "is_staff",
                 ),
             },
         ),
