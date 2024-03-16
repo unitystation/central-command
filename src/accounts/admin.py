@@ -65,3 +65,9 @@ class AccountAdminView(admin.ModelAdmin):
         ("Legacy", {"classes": ("wide",), "fields": ("legacy_id",)}),
     )
     inlines = [AccountConfirmationInline, PasswordResetRequestInline]
+    list_filter = ("is_staff", "is_verified", "is_confirmed", "is_active")
+    search_fields = (
+        "email__icontains",
+        "username__icontains",
+        "unique_identifier__icontains",
+    )
