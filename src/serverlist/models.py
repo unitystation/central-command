@@ -9,7 +9,14 @@ class Server(models.Model):
     ip_address = models.CharField(max_length=50)
     port = models.IntegerField()
     player_count = models.IntegerField()
+    player_limit = models.IntegerField()
     image_link = models.URLField()
+    round_time = models.TimeField()
+    windows_build = models.URLField()
+    linux_build = models.URLField()
+    mac_build = models.URLField()
+    build_version = models.CharField(max_length=16)
+    code_scan_version = models.CharField(max_length=16)
     ## TODO: ADD VALIDATION FOR APPROVED API KEYS SO THAT STRANGERS DONT SPAM STATIONHUB WITH INVALID SERVERS ##
 
     def __str__(self):
