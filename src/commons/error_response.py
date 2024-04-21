@@ -18,11 +18,11 @@ def custom_exception_handler(exc, context):
     """
     response = exception_handler(exc, context)
 
-    if response is not None:
-        response.data["status_code"] = response.status_code
-    else:
+    if response is None:
         logger.error("An unhandled error occurred: %s", exc)
         logger.error("Context: %s", context)
-        return ErrorResponse(f"An unhandled error occurred: {exc}")
+        return ErrorResponse("Something went wrong on our end. Please try again later.")
+
+    response.data["status_code"] = response.status_code
 
     return response

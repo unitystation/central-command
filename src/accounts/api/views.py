@@ -1,11 +1,11 @@
 import logging
+import secrets
 
 from urllib.parse import urljoin
 from uuid import uuid4
 
-from commons.error_response import ErrorResponse
-from commons.mail_wrapper import send_email_with_template
 from django.conf import settings
+from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from drf_spectacular.utils import extend_schema
 from knox.models import AuthToken
@@ -17,16 +17,16 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
 
-from ..exceptions import MissingMailConfirmationError
-from ..models import Account
+from commons.error_response import ErrorResponse
+from commons.mail_wrapper import send_email_with_template
+
+from ..models import Account, AccountConfirmation, PasswordResetRequestModel
 from .serializers import (
     ConfirmAccountSerializer,
+    EmailSerializer,
     LoginWithCredentialsSerializer,
-    PasswordResetRequestModel,
     PublicAccountDataSerializer,
     RegisterAccountSerializer,
-    ResendAccountSerializer,
-    ResetPasswordRequestSerializer,
     ResetPasswordSerializer,
     UpdateAccountSerializer,
     VerifyAccountSerializer,
@@ -54,17 +54,18 @@ class LoginWithTokenView(KnoxLoginView):
     def get_post_response_data(self, request, token, instance):
         user: Account = request.user
 
-        try:
-            if not user.is_confirmed:
-                raise MissingMailConfirmationError()
-        except MissingMailConfirmationError as e:
-            return ErrorResponse(str(e), MissingMailConfirmationError.status_code)
+        if not user.is_confirmed:
+            return ErrorResponse(
+                "You must confirm your email before attempting to login.",
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         serializer = self.get_user_serializer_class()
+        data = {
+            "account": serializer(request.user, context=self.get_context()).data,
+            "token": token,
+        }
 
-        data = {"token": token}
-        if serializer is not None:
-            data["user"] = serializer(request.user, context=self.get_context()).data
         return data
 
     def get_user_serializer_class(self):
@@ -84,19 +85,28 @@ class LoginWithCredentialsView(GenericAPIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
 
-        try:
-            serializer.is_valid(raise_exception=True)
-            account = Account.objects.get(email=serializer.data["email"])
-            if not account.is_active:
-                raise MissingMailConfirmationError()
-        except ObjectDoesNotExist:
-            return ErrorResponse("Account does not exist.", status.HTTP_404_NOT_FOUND)
-        except MissingMailConfirmationError as e:
-            return ErrorResponse(str(e), status.HTTP_400_BAD_REQUEST)
-        except ValidationError as e:
-            return ErrorResponse(str(e), status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-        account = serializer.validated_data
+        email = serializer.validated_data["email"]
+        password = serializer.validated_data["password"]
+
+        account: Account | None = authenticate(email=email, password=password)  # type: ignore[assignment]
+
+        if account is None:
+            return ErrorResponse(
+                "Unable to login with provided credentials.",
+                status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not account.is_confirmed:
+            return ErrorResponse(
+                "You must confirm your email before attempting to login.",
+                status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not account.is_active:
+            return ErrorResponse("Account is suspended.", status.HTTP_401_UNAUTHORIZED)
 
         return Response(
             {
@@ -119,17 +129,14 @@ class RegisterAccountView(GenericAPIView):
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            return Response(data={"error": str(e)}, status=e.status_code)
+
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
         account = serializer.save()
-
         return Response(
             {
-                "account": RegisterAccountSerializer(account, context=self.get_serializer_context()).data,
-                "token": AuthToken.objects.create(account)[1],
+                "account": PublicAccountDataSerializer(account, context=self.get_serializer_context()).data,
             },
             status=status.HTTP_200_OK,
         )
@@ -171,7 +178,7 @@ class RequestVerificationTokenView(APIView):
     **Requires Token authentication**
     """
 
-    def post(self, *args, **kwargs):
+    def get(self, *args, **kwargs):
         verification_token = uuid4()
 
         try:
@@ -207,12 +214,23 @@ class VerifyAccountView(GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
 
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            return ErrorResponse(str(e), e.status_code)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-        account = Account.objects.get(unique_identifier=serializer.data["unique_identifier"])
+        try:
+            account = Account.objects.get(unique_identifier=serializer.validated_data["unique_identifier"])
+        except Account.DoesNotExist:
+            return ErrorResponse(
+                "Either token or unique_identifier are invalid.",
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        if account.verification_token != serializer.validated_data["verification_token"]:
+            return ErrorResponse(
+                "Either token or unique_identifier are invalid.",
+                status.HTTP_400_BAD_REQUEST,
+            )
+
         public_data = PublicAccountDataSerializer(account).data
 
         return Response(public_data, status=status.HTTP_200_OK)
@@ -232,20 +250,21 @@ class ResetPasswordView(GenericAPIView):
     def post(self, request, reset_token):
         serializer = self.serializer_class(data=request.data)
 
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
         try:
-            serializer.is_valid(raise_exception=True)
-            reset_request = PasswordResetRequestModel.objects.get(token=reset_token)
-            if not reset_request.is_token_valid():
+            reset_token = PasswordResetRequestModel.objects.get(token=reset_token)
+            if not reset_token.is_token_valid():
                 raise PasswordResetRequestModel.DoesNotExist
-        except ValidationError as e:
-            return ErrorResponse(str(e), e.status_code)
         except PasswordResetRequestModel.DoesNotExist:
             return ErrorResponse("Invalid link or expired.", status.HTTP_400_BAD_REQUEST)
 
-        account = reset_request.account
+        account = reset_token.account
         account.set_password(serializer.validated_data["password"])
         account.save()
-        reset_request.delete()
+        reset_token.delete()
+
         return Response(status=status.HTTP_200_OK)
 
 
@@ -257,24 +276,30 @@ class RequestPasswordResetView(GenericAPIView):
     """
 
     permission_classes = (AllowAny,)
-    serializer_class = ResetPasswordRequestSerializer
+    serializer_class = EmailSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
 
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
         try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError:
+            account = Account.objects.get(email=serializer.validated_data["email"])
+        except Account.DoesNotExist:
             logger.warning(
-                "Attempted to reset password for non-existing account: %s", serializer.validated_data["email"]
+                "Attempted to reset password for non-existing account: %s",
+                serializer.validated_data["email"],
             )
             return Response(status=status.HTTP_200_OK)
 
-        serializer.save()
-        link = urljoin(settings.PASS_RESET_URL, serializer.validated_data["token"])
+        token = secrets.token_urlsafe(32)
+        PasswordResetRequestModel.objects.create(account=account, token=token)
+
+        link = urljoin(settings.PASS_RESET_URL, token)
 
         send_email_with_template(
-            recipient=serializer.validated_data["account"].email,
+            recipient=account.email,
             subject="Reset your password",
             template="password_reset.html",
             context={"link": link},
@@ -293,26 +318,18 @@ class ConfirmAccountView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ConfirmAccountSerializer
 
-    def post(self, request, confirm_token):
-        serializer = self.serializer_class(data={"token": confirm_token})
-        print(serializer)
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
 
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            return ErrorResponse(str(e), e.status_code)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-        account_id = serializer.validated_data.account.unique_identifier
+        account_confirmation = AccountConfirmation.objects.get(token=serializer.validated_data["token"])
+        account = account_confirmation.account
 
-        try:
-            account = Account.objects.get(unique_identifier=account_id)
-        except Account.DoesNotExist:
-            return ErrorResponse("Account for this confirmation link does not exist.", status.HTTP_400_BAD_REQUEST)
-
-        account.is_active = True
         account.is_confirmed = True
+        account_confirmation.delete()
         account.save()
-        serializer.validated_data.delete()
 
         return Response(status=status.HTTP_200_OK)
 
@@ -325,23 +342,30 @@ class ResendAccountConfirmationView(GenericAPIView):
     """
 
     permission_classes = (AllowAny,)
-    serializer_class = ResendAccountSerializer
+    serializer_class = EmailSerializer
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+    def post(self, request, *args, **kwargs):
+        serializer: EmailSerializer = self.serializer_class(data=request.data)
 
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            return ErrorResponse(str(e), e.status_code)
-        except Account.DoesNotExist:
-            logger.warning(
-                "Attempted to resend account confirmation for non-existing account: %s",
-                serializer.validated_data["email"],
-            )
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            try:
+                account = Account.objects.get(email=email)
+            except Account.DoesNotExist:
+                logger.warning(
+                    "Attempted to resend confirmation mail for non-existing account: %s",
+                    email,
+                )
+                return Response(status=status.HTTP_200_OK)
+
+            if account.is_confirmed:
+                logger.warning(
+                    "Attempted to resend confirmation mail for already confirmed account: %s",
+                    email,
+                )
+                return Response(status=status.HTTP_200_OK)
+
+            account.send_confirmation_mail()
             return Response(status=status.HTTP_200_OK)
-
-        account = serializer.validated_data
-        account.send_confirmation_mail()
-
-        return Response(status=status.HTTP_200_OK)
+        else:
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)

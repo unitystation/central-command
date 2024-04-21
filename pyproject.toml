@@ -1,13 +1,8 @@
-[tool.black]
-target-version = ['py311']
-line-length = 121
-force-exclude = '''
-migrations
-'''
-
 [tool.ruff]
 exclude = ["migrations"]
 line-length = 121
+
+[tool.ruff.lint]
 ignore = [
     # doesn't like Optional
     # https://github.com/charliermarsh/ruff/issues/4858
@@ -20,6 +15,8 @@ ignore = [
     "RUF012",
     # treats a link with the word "password" in it as a hardcoded password
     "S105",
+    # the limit is too low and dumb. We don't use squared monitors anymore
+    "E501",
 ]
 select = [
     # pyflakes
@@ -54,24 +51,38 @@ fixable = [
     "I",
 ]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 combine-as-imports = true
 lines-between-types = 1
+known-first-party = [
+    "accounts",
+    "central_command",
+    "commons",
+    "persistence",
+]
 
-# with 'mypy' and 'django-stubs[compatible-mypy]' installed
-# [tool.mypy]
-# plugins = ["mypy_django_plugin.main"]
-#
-# [tool.django-stubs]
-# django_settings_module = "central_command.settings"
-#
-# [[tool.mypy.overrides]]
-# module = [
-#     "django_email_verification.*",
-#     "rest_framework.*",
-#     "knox.*",
-# ]
-# ignore_missing_imports = true
+[tool.mypy]
+show_column_numbers = true
+show_error_codes = true
+
+# XXX: add new rules here
+check_untyped_defs = true
+warn_unused_ignores = true
+
+plugins = [
+    "mypy_django_plugin.main",
+    "mypy_drf_plugin.main",
+]
+
+[tool.django-stubs]
+django_settings_module = "central_command.settings"
+
+[[tool.mypy.overrides]]
+module = [
+    "post_office.*",
+    "knox.*",
+]
+ignore_missing_imports = true
 
 [tool.poetry]
 name = "central-command"
@@ -91,9 +102,15 @@ whitenoise = "^6.2.0"
 django-post-office = "^3.8.0"
 drf-spectacular = "^0.27.1"
 
-[tool.poetry.group.dev.dependencies]
-pre-commit = "^3.6.0"
-ruff = "^0.1.13"
+[tool.poetry.group.lint.dependencies]
+pre-commit = "3.*"
+ruff = "0.3.*"
+
+# typecheck is separate for CI
+[tool.poetry.group.typecheck.dependencies]
+mypy = "1.*"
+django-stubs = {extras = ["compatible-mypy"], version = "4.*"}
+djangorestframework-stubs = {extras = ["compatible-mypy"], version = "3.*"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

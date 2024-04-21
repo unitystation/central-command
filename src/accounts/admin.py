@@ -11,7 +11,7 @@ class AccountConfirmationInline(admin.TabularInline):
     def is_token_valid_display(self, instance):
         return instance.is_token_valid()
 
-    is_token_valid_display.short_description = "Is Token Valid"
+    is_token_valid_display.short_description = "Is Token Valid"  # type: ignore[attr-defined]
 
 
 class PasswordResetRequestInline(admin.TabularInline):
@@ -22,18 +22,19 @@ class PasswordResetRequestInline(admin.TabularInline):
     def is_token_valid_display(self, instance):
         return instance.is_token_valid()
 
-    is_token_valid_display.short_description = "Is Token Valid"
+    is_token_valid_display.short_description = "Is Token Valid"  # type: ignore[attr-defined]
 
 
 @admin.register(Account)
 class AccountAdminView(admin.ModelAdmin):
     list_display = (
-        "email",
-        "is_active",
         "unique_identifier",
+        "email",
         "username",
         "is_confirmed",
         "is_verified",
+        "is_active",
+        "is_staff",
         "legacy_id",
     )
     fieldsets = (
@@ -57,9 +58,16 @@ class AccountAdminView(admin.ModelAdmin):
                     "is_active",
                     "is_confirmed",
                     "is_verified",
+                    "is_staff",
                 ),
             },
         ),
         ("Legacy", {"classes": ("wide",), "fields": ("legacy_id",)}),
     )
     inlines = [AccountConfirmationInline, PasswordResetRequestInline]
+    list_filter = ("is_staff", "is_verified", "is_confirmed", "is_active")
+    search_fields = (
+        "email__icontains",
+        "username__icontains",
+        "unique_identifier__icontains",
+    )

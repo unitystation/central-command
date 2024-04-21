@@ -16,6 +16,13 @@ from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urljoin
 
+from dotenv import load_dotenv
+
+# dotenv needs to be loaded again (after manage.py) because of mypy plugin which runs settings.py separately
+# see https://github.com/typeddjango/django-stubs/issues/458
+load_dotenv()
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -155,6 +162,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
+    {
+        "NAME": "accounts.custom_attribute_similarity_validator.CustomUserAttributeSimilarityValidator",
+    },
 ]
 
 # Internationalization
@@ -187,12 +197,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Website configuration
-WEBSITE_URL = os.environ.get("WEBSITE_URL")
+WEBSITE_URL = os.environ["WEBSITE_URL"]
 
-PASS_RESET_URL_SUFFIX = os.environ.get("PASS_RESET_URL_SUFFIX")
+PASS_RESET_URL_SUFFIX = os.environ["PASS_RESET_URL_SUFFIX"]
 PASS_RESET_URL = urljoin(WEBSITE_URL, PASS_RESET_URL_SUFFIX)
 PASS_RESET_TOKEN_TTL = 60  # minutes
 
-ACCOUNT_CONFIRMATION_URL_SUFFIX = os.environ.get("ACCOUNT_CONFIRMATION_URL_SUFFIX")
+ACCOUNT_CONFIRMATION_URL_SUFFIX = os.environ["ACCOUNT_CONFIRMATION_URL_SUFFIX"]
 ACCOUNT_CONFIRMATION_URL = urljoin(WEBSITE_URL, ACCOUNT_CONFIRMATION_URL_SUFFIX)
 ACCOUNT_CONFIRMATION_TOKEN_TTL = 24  # hours

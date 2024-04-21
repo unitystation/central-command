@@ -1,0 +1,17 @@
+meta {
+  name: Valid
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/accounts/resend-account-confirmation
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "mail@mail.com"
+  }
+}
