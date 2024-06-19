@@ -10,6 +10,13 @@ services:
     ports:
       - "5432:5432"
 
+  redis:
+    image: redis:7.2.5-alpine
+    ports:
+      - "6379:6379"
+    environment:
+      REDIS_PORT: 6379
+
   web:
     depends_on:
     - db
