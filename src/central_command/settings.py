@@ -103,15 +103,13 @@ DATABASES = {
     }
 }
 
-REDIS_LOCATION = f"redis://{os.environ.get('REDIS_HOST')}:6379/1"
+MEMCACHED_HOST = os.environ.get("MEMCACHED_HOST", "127.0.0.1")
+MEMCACHED_PORT = os.environ.get("MEMCACHED_PORT", 11211)
 
 CACHES = {
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": REDIS_LOCATION,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
+        "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
+        "LOCATION": f"{MEMCACHED_HOST}:{MEMCACHED_PORT}",
     }
 }
 
