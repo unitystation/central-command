@@ -34,7 +34,7 @@ class AccountAdminView(admin.ModelAdmin):
         "is_confirmed",
         "is_verified",
         "is_active",
-        "is_staff",
+        "is_superuser",
         "legacy_id",
     )
     fieldsets = (
@@ -58,14 +58,14 @@ class AccountAdminView(admin.ModelAdmin):
                     "is_active",
                     "is_confirmed",
                     "is_verified",
-                    "is_staff",
+                    "is_superuser",
                 ),
             },
         ),
         ("Legacy", {"classes": ("wide",), "fields": ("legacy_id",)}),
     )
     inlines = [AccountConfirmationInline, PasswordResetRequestInline]
-    list_filter = ("is_staff", "is_verified", "is_confirmed", "is_active")
+    list_filter = ("is_superuser", "is_verified", "is_confirmed", "is_active")
     search_fields = (
         "email__icontains",
         "username__icontains",
