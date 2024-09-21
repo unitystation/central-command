@@ -5,4 +5,4 @@ from .models import Character
 
 @admin.register(Character)
 class CharacterAdminView(admin.ModelAdmin):
-    pass
+    readonly_fields = ("character_name", "last_updated")
