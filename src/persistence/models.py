@@ -22,7 +22,9 @@ class Character(models.Model):
     )
 
     data = models.JSONField(
-        name="data", verbose_name="Character data", help_text="Unstructured character data in JSON format."
+        name="data",
+        verbose_name="Character data",
+        help_text="Unstructured character data in JSON format.",
     )
     """The character data."""
 
@@ -32,4 +34,8 @@ class Character(models.Model):
     )
 
     def __str__(self):
-        return f"{self.account.unique_identifier}'s character"
+        return f"{self.character_name} by {self.account.unique_identifier}"
+
+    @property
+    def character_name(self) -> str:
+        return self.data.get("Name", "Unknown")
