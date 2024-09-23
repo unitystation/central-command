@@ -34,7 +34,7 @@ class Character(models.Model):
     )
 
     def __str__(self):
-        return f"{self.character_name} by {self.account.unique_identifier}"
+        return f'"{self.character_name}" by {self.account.unique_identifier}'
 
     @property
     def character_name(self) -> str:
