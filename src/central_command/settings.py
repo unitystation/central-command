@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "post_office",
     "accounts",
     "persistence",
+    "server",
     "drf_spectacular",
 ]
 
@@ -151,6 +152,16 @@ DATABASES = {
         "PASSWORD": os.environ.get("DB_PASSWORD", ""),
         "HOST": os.environ.get("DB_HOST", "localhost"),
         "PORT": os.environ.get("DB_PORT", "5432"),
+    }
+}
+
+MEMCACHED_HOST = os.environ.get("MEMCACHED_HOST", "127.0.0.1")
+MEMCACHED_PORT = os.environ.get("MEMCACHED_PORT", 11211)
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
+        "LOCATION": f"{MEMCACHED_HOST}:{MEMCACHED_PORT}",
     }
 }
 

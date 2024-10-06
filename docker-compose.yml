@@ -8,6 +8,9 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
 
+  memcached:
+    image: memcached:1.6-alpine
+
   web:
     image: unitystation/central-command:latest
     environment:

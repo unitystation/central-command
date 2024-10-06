@@ -10,6 +10,11 @@ services:
     ports:
       - "5432:5432"
 
+  memcached:
+    image: memcached:1.6-alpine
+    ports:
+      - "11211:11211"
+
   web:
     depends_on:
     - db
@@ -23,5 +28,3 @@ services:
 
 volumes:
   db-data:
-  static-volume:
-  media-volume:
