@@ -1,3 +1,35 @@
+[tool.poetry]
+name = "central-command"
+version = "0.1.0"
+description = "All-in-one backend application for Unitystation"
+authors = ["Andrés Riquelme <andresfranco.rs@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+Django = "^3.2.12"
+djangorestframework = "^3.12.1"
+psycopg2-binary = "2.9.9"
+django-rest-knox = "^4.1.0"
+gunicorn = "^20.1.0"
+python-dotenv = "^0.19.2"
+whitenoise = "^6.2.0"
+django-post-office = "^3.8.0"
+drf-spectacular = "^0.27.1"
+
+[tool.poetry.group.lint.dependencies]
+pre-commit = "4.0.1"
+ruff = "0.6.9"
+
+# typecheck is separate for CI
+[tool.poetry.group.typecheck.dependencies]
+mypy = "1.*"
+django-stubs = {extras = ["compatible-mypy"], version = "4.*"}
+djangorestframework-stubs = {extras = ["compatible-mypy"], version = "3.*"}
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.ruff]
 exclude = ["migrations"]
 line-length = 121
@@ -83,35 +115,3 @@ module = [
     "knox.*",
 ]
 ignore_missing_imports = true
-
-[tool.poetry]
-name = "central-command"
-version = "0.1.0"
-description = "All-in-one backend application for Unitystation"
-authors = ["Andrés Riquelme <andresfranco.rs@gmail.com>"]
-
-[tool.poetry.dependencies]
-python = "^3.11"
-Django = "^3.2.12"
-djangorestframework = "^3.12.1"
-psycopg2-binary = "2.9.9"
-django-rest-knox = "^4.1.0"
-gunicorn = "^20.1.0"
-python-dotenv = "^0.19.2"
-whitenoise = "^6.2.0"
-django-post-office = "^3.8.0"
-drf-spectacular = "^0.27.1"
-
-[tool.poetry.group.lint.dependencies]
-pre-commit = "3.*"
-ruff = "0.3.*"
-
-# typecheck is separate for CI
-[tool.poetry.group.typecheck.dependencies]
-mypy = "1.*"
-django-stubs = {extras = ["compatible-mypy"], version = "4.*"}
-djangorestframework-stubs = {extras = ["compatible-mypy"], version = "3.*"}
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
