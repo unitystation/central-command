@@ -11,7 +11,7 @@ from .views import (
     ResendAccountConfirmationView,
     ResetPasswordView,
     UpdateAccountView,
-    VerifyAccountView,
+    VerifyAccountView, CheckSHA512ForAccountView, RegisterSHA512ForAccount,
 )
 
 app_name = "account"
@@ -45,4 +45,6 @@ urlpatterns = [
         name="reset-password-token",
     ),
     path("reset-password/", RequestPasswordResetView.as_view(), name="reset-password"),
+    path("register-SHA512-for-account/", RegisterSHA512ForAccount.as_view(), name="register-SHA512-for-account"),
+    path("check-SHA512-for-account/", CheckSHA512ForAccountView.as_view(), name="check-SHA512-for-account"),
 ]

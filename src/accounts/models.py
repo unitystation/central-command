@@ -13,7 +13,8 @@ from django.utils import timezone
 from commons.mail_wrapper import send_email_with_template
 
 from .validators import AccountNameValidator
-
+from django.utils import timezone
+from datetime import timedelta
 
 class Account(AbstractUser):
     email = models.EmailField(
@@ -133,3 +134,14 @@ class PasswordResetRequestModel(models.Model):
         if self.created_at is None:
             return False
         return (self.created_at + timedelta(minutes=settings.PASS_RESET_TOKEN_TTL)) > timezone.now()
+
+class SHA512Token(models.Model):
+    token = models.CharField(max_length=128)
+    account = models.ForeignKey(Account, related_name='sha512_tokens', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"SHA512 token for {self.account} created at {self.created_at}"
+
+    def is_valid(self):
+        return (self.created_at + timedelta(minutes=3)) > timezone.now()

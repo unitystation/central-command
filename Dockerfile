@@ -39,4 +39,4 @@ RUN : \
 
 RUN crontab -l | { cat; echo "* * * * * python /src/manage.py send_queued_mail >> /home/website/logs/send_mail.log 2>&1"; } | crontab -
 
-ENTRYPOINT ["./entrypoint.sh"]
+CMD ["./entrypoint.sh"]

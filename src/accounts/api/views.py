@@ -3,7 +3,7 @@ import secrets
 
 from urllib.parse import urljoin
 from uuid import uuid4
-
+from knox.auth import TokenAuthentication
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
@@ -16,11 +16,12 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
+from rest_framework import serializers, status
 
 from commons.error_response import ErrorResponse
 from commons.mail_wrapper import send_email_with_template
 
-from ..models import Account, AccountConfirmation, PasswordResetRequestModel
+from ..models import Account, AccountConfirmation, PasswordResetRequestModel, SHA512Token
 from .serializers import (
     ConfirmAccountSerializer,
     EmailSerializer,
@@ -369,3 +370,93 @@ class ResendAccountConfirmationView(GenericAPIView):
             return Response(status=status.HTTP_200_OK)
         else:
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class RegisterSHA512ForAccount(APIView):
+    """
+    Authenticates via Knox Token (like LoginWithTokenView) and registers a SHA512 token.
+    **Public endpoint, but token is required via header.**
+    """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [AllowAny]  # Anyone can hit it, but auth is required
+
+    class InputSerializer(serializers.Serializer):
+        sha512_token = serializers.CharField(max_length=128)
+
+    def post(self, request, *args, **kwargs):
+        user: Account = request.user
+
+        if not request.auth:
+            return ErrorResponse("Invalid or missing token.", status.HTTP_401_UNAUTHORIZED)
+
+        if not user.is_confirmed:
+            return ErrorResponse(
+                "You must confirm your email before performing this action.",
+                status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = self.InputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+        SHA512Token.objects.create(
+            account=user,
+            token=serializer.validated_data["sha512_token"]
+        )
+
+        return Response(
+            {"detail": "SHA512 token registered successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+class CheckSHA512ForAccountView(APIView):
+    """
+    Given an account unique_identifier and a SHA512 token,
+    checks if the token is associated with that account.
+    **Public endpoint**
+    """
+    permission_classes = (AllowAny,)
+
+    class InputSerializer(serializers.Serializer):
+        unique_identifier = serializers.CharField(max_length=28)
+        sha512_token = serializers.CharField(max_length=128)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.InputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+        unique_id = serializer.validated_data["unique_identifier"]
+        token = serializer.validated_data["sha512_token"]
+
+        try:
+            account = Account.objects.get(unique_identifier=unique_id)
+        except Account.DoesNotExist:
+            # If account doesn't exist, token obviously not associated
+            return Response({"exists": False}, status=status.HTTP_200_OK)
+
+        # Check if the token exists and is still valid (created within 3 minutes)
+        from django.utils import timezone
+        from datetime import timedelta
+
+        valid_cutoff = timezone.now() - timedelta(minutes=3)
+
+        exists = SHA512Token.objects.filter(
+            account=account,
+            token=token,
+            created_at__gte=valid_cutoff,
+        ).exists()
+
+        return Response({"exists": exists}, status=status.HTTP_200_OK)
+
+#
+#
+#class Command(BaseCommand):
+#    help = 'Delete expired SHA512 tokens (older than 3 minutes)'
+#
+#    def handle(self, *args, **kwargs):
+#        cutoff = timezone.now() - timedelta(minutes=3)
+#        deleted, _ = SHA512Token.objects.filter(created_at__lt=cutoff).delete()
+#        self.stdout.write(f"Deleted {deleted} expired SHA512 tokens.")
