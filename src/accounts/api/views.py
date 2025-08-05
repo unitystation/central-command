@@ -33,6 +33,9 @@ from .serializers import (
     VerifyAccountSerializer,
 )
 
+from django.utils import timezone
+from datetime import timedelta
+
 logger = logging.getLogger(__name__)
 
 
@@ -372,22 +375,39 @@ class ResendAccountConfirmationView(GenericAPIView):
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
+#class CreateCharacterView(GenericAPIView):
+#    """
+#    Creates a new character.#
+#
+#    **Requires Token Authentication.**
+#    """#
+#
+#    def post(self, request):
+#        data_with_account = request.data.copy()
+#        data_with_account["account"] = request.user.pk#
+#
+#        serializer = self.serializer_class(data=data_with_account)
+#        serializer.account = request.user  # type: ignore
+#        try:
+#            serializer.is_valid(raise_exception=True)
+#        except ValidationError as e:
+#            data = {"error": str(e)}
+#            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+#        except PermissionDenied:
+#            data = {"error": "You do not have permission to write this data!"}
+#            return Response(data, status=status.HTTP_403_FORBIDDEN)
+#        serializer.save()
+#        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class RegisterSHA512ForAccount(APIView):
-    """
-    Authenticates via Knox Token (like LoginWithTokenView) and registers a SHA512 token.
-    **Public endpoint, but token is required via header.**
-    """
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [AllowAny]  # Anyone can hit it, but auth is required
 
     class InputSerializer(serializers.Serializer):
         sha512_token = serializers.CharField(max_length=128)
 
     def post(self, request, *args, **kwargs):
         user: Account = request.user
-
+        data = self.request.user.pk
         if not request.auth:
             return ErrorResponse("Invalid or missing token.", status.HTTP_401_UNAUTHORIZED)
 
@@ -411,10 +431,12 @@ class RegisterSHA512ForAccount(APIView):
             status=status.HTTP_200_OK,
         )
 
+
 class CheckSHA512ForAccountView(APIView):
     """
     Given an account unique_identifier and a SHA512 token,
     checks if the token is associated with that account.
+    Deletes the token after checking.
     **Public endpoint**
     """
     permission_classes = (AllowAny,)
@@ -434,25 +456,23 @@ class CheckSHA512ForAccountView(APIView):
         try:
             account = Account.objects.get(unique_identifier=unique_id)
         except Account.DoesNotExist:
-            # If account doesn't exist, token obviously not associated
             return Response({"exists": False}, status=status.HTTP_200_OK)
-
-        # Check if the token exists and is still valid (created within 3 minutes)
-        from django.utils import timezone
-        from datetime import timedelta
 
         valid_cutoff = timezone.now() - timedelta(minutes=3)
 
-        exists = SHA512Token.objects.filter(
+        matching_token = SHA512Token.objects.filter(
             account=account,
             token=token,
             created_at__gte=valid_cutoff,
-        ).exists()
+        ).first()
 
-        return Response({"exists": exists}, status=status.HTTP_200_OK)
+        if matching_token:
+            matching_token.delete()
+            return Response({"exists": True}, status=status.HTTP_200_OK)
+        else:
+            return Response({"exists": False}, status=status.HTTP_200_OK)
 
-#
-#
+
 #class Command(BaseCommand):
 #    help = 'Delete expired SHA512 tokens (older than 3 minutes)'
 #

@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/accounts/register
+  url: http://localhost:8000/accounts/register
   body: json
   auth: none
 }
@@ -13,7 +13,7 @@ post {
 body:json {
   {
     "unique_identifier": "myname",
-    "username": "My Name",
+    "username": "Name",
     "password": "qweasd123",
     "email": "myname@email.com"
   }

@@ -5,14 +5,14 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/accounts/login-credentials
+  url: http://127.0.0.1:8000/accounts/login-credentials
   body: json
   auth: none
 }
 
 body:json {
   {
-    "email": "admin@admin.com",
-    "password": "admin"
+    "email": "bob@bob.bob",
+    "password": "bob"
   }
 }

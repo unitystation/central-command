@@ -7,6 +7,11 @@ from .views import (
     GetCharacterByIdView,
     GetCompatibleCharacters,
     UpdateCharacterView,
+    GenerateForkTokenView,
+    CreateCharacterViewToken,
+    DeleteCharacterViewToken,
+    GetCompatibleCharactersToken,
+    UpdateCharacterViewToken,
 )
 
 app_name = "persistence"
@@ -18,4 +23,16 @@ urlpatterns = [
     path("characters/compatible", GetCompatibleCharacters.as_view(), name="characters-compatible"),
     path("characters/<int:pk>/update", UpdateCharacterView.as_view(), name="characters-patch"),
     path("characters/<int:pk>/delete", DeleteCharacterView.as_view(), name="characters-delete"),
+
+
+
+    path("characters/<int:pk>/updateToken", UpdateCharacterViewToken.as_view(), name="characters-patch-token"),     # PutAccountsCharacterByIDByCharactersToken
+    path("characters/createToken", CreateCharacterViewToken.as_view(), name="characters-create-token"), #PostMakeAccountsCharacterByCharactersToken
+
+    path("characters/compatibleToken", GetCompatibleCharactersToken.as_view(), name="characters-compatible-token"), #GetCharactersByCharacterSheetToken
+
+    path("characters/<int:pk>/deleteToken", DeleteCharacterViewToken.as_view(), name="characters-delete-token"), #DeleteAccountsCharacterByIDByCharactersToken
+
+    path("characters/GenForkToken", GenerateForkTokenView.as_view(), name="Gen-Fork-token"),
+
 ]

@@ -1,0 +1,21 @@
+meta {
+  name: register token
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://127.0.0.1:8000/accounts/register-SHA512-for-account/
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Token 894bf0bfd6ef6c05feb6a3447dfc2f3a2fb0147cd7da498d2843021794297cf0
+}
+
+body:json {
+  {
+  "sha512_token" : "AA"
+  }
+}
