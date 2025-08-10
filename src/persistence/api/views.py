@@ -440,12 +440,18 @@ class UpdateCharacterViewToken(GenericAPIView):
             character = None
             is_new = True
 
+
         # If updating, check ownership and fork compatibility
-        if not is_new:
+        if not is_new and character is not None:
             if character.account != account:
-                return Response({"error": "You do not have permission to edit this character!"}, status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    {"error": "You do not have permission to edit this character!"}, status=status.HTTP_403_FORBIDDEN
+                )
             if character.fork_compatibility != server_id:
-                return Response({"error": "This character does not match the server/fork in the token!"}, status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    {"error": "This character does not match the server/fork in the token!"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
 
         # Force account and fork_compatibility from token (both on create and update)
         incoming_data = request.data.copy()

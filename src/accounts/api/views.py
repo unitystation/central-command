@@ -373,32 +373,6 @@ class ResendAccountConfirmationView(GenericAPIView):
         else:
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-
-#class CreateCharacterView(GenericAPIView):
-#    """
-#    Creates a new character.#
-#
-#    **Requires Token Authentication.**
-#    """#
-#
-#    def post(self, request):
-#        data_with_account = request.data.copy()
-#        data_with_account["account"] = request.user.pk#
-#
-#        serializer = self.serializer_class(data=data_with_account)
-#        serializer.account = request.user  # type: ignore
-#        try:
-#            serializer.is_valid(raise_exception=True)
-#        except ValidationError as e:
-#            data = {"error": str(e)}
-#            return Response(data, status=status.HTTP_400_BAD_REQUEST)
-#        except PermissionDenied:
-#            data = {"error": "You do not have permission to write this data!"}
-#            return Response(data, status=status.HTTP_403_FORBIDDEN)
-#        serializer.save()
-#        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
 class RegisterSHA512ForAccount(APIView):
 
     class InputSerializer(serializers.Serializer):
