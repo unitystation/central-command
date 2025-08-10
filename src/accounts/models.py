@@ -13,8 +13,7 @@ from django.utils import timezone
 from commons.mail_wrapper import send_email_with_template
 
 from .validators import AccountNameValidator
-from django.utils import timezone
-from datetime import timedelta
+
 
 class Account(AbstractUser):
     email = models.EmailField(

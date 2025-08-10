@@ -2,15 +2,15 @@ from django.urls import path
 
 from .views import (
     CreateCharacterView,
+    CreateCharacterViewToken,
     DeleteCharacterView,
+    DeleteCharacterViewToken,
+    GenerateForkTokenView,
     GetAllCharactersByAccountView,
     GetCharacterByIdView,
     GetCompatibleCharacters,
-    UpdateCharacterView,
-    GenerateForkTokenView,
-    CreateCharacterViewToken,
-    DeleteCharacterViewToken,
     GetCompatibleCharactersToken,
+    UpdateCharacterView,
     UpdateCharacterViewToken,
 )
 

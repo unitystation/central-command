@@ -2,16 +2,18 @@ from django.urls import path
 from knox import views as knox_views
 
 from .views import (
+    CheckSHA512ForAccountView,
     ConfirmAccountView,
     LoginWithCredentialsView,
     LoginWithTokenView,
     RegisterAccountView,
+    RegisterSHA512ForAccount,
     RequestPasswordResetView,
     RequestVerificationTokenView,
     ResendAccountConfirmationView,
     ResetPasswordView,
     UpdateAccountView,
-    VerifyAccountView, CheckSHA512ForAccountView, RegisterSHA512ForAccount,
+    VerifyAccountView,
 )
 
 app_name = "account"
