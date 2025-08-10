@@ -3,14 +3,14 @@ import uuid
 
 from django.core import signing
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import GenericAPIView, ListAPIView
-from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.generics import GenericAPIView
 
 from accounts.models import Account
+
 from ..models import Character
 from .serializers import (
     CharacterSerializer,
@@ -237,11 +237,11 @@ class CreateCharacterViewToken(GenericAPIView):
 
     serializer_class = CharacterSerializer
     permission_classes = (AllowAny,)
-    def generate_token(server_id: str) -> str:
+    def generate_token(self, server_id: str) -> str:
         data = {"server_id": server_id, "nonce": secrets.token_hex(8), "uuid": str(uuid.uuid4())}
         return signing.dumps(data)
 
-    def parse_token(token: str) -> dict:
+    def parse_token(self,token: str) -> dict:
         return signing.loads(token)
 
     def post(self, request):
