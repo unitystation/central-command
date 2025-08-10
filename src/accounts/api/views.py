@@ -11,7 +11,6 @@ from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.management import BaseCommand
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
-from knox.auth import TokenAuthentication
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
 from rest_framework import serializers, status
@@ -407,7 +406,6 @@ class RegisterSHA512ForAccount(APIView):
 
     def post(self, request, *args, **kwargs):
         user: Account = request.user
-        data = self.request.user.pk
         if not request.auth:
             return ErrorResponse("Invalid or missing token.", status.HTTP_401_UNAUTHORIZED)
 
