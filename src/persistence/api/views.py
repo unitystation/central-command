@@ -5,6 +5,7 @@ from django.core import signing
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -192,27 +193,25 @@ class CreateCharacterView(GenericAPIView):
 
 class GenerateForkTokenView(GenericAPIView):
     """
-    Creates a new character based on the token which embeds
-    the fork/server and account identifier.
-
+    Generates a token for the fork/server and account identifier.
     **Requires token in 'X-Character-Token' header.**
     """
-
     serializer_class = CharacterSerializer
 
     def post(self, request):
         server_id = request.data.get("fork_compatibility")
-
         if not server_id:
-            return Response({"error": "Missing 'fork_compatibility' in request body."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Missing 'fork_compatibility' in request body."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         user = request.user
-
-        # You can adjust this if your field is different
         if not hasattr(user, "unique_identifier"):
-            return Response({"error": "Authenticated user lacks a unique identifier."},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": "Authenticated user lacks a unique identifier."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         token_data = {
             "server_id": server_id,
@@ -220,7 +219,9 @@ class GenerateForkTokenView(GenericAPIView):
             "nonce": secrets.token_hex(8),
         }
 
-        token = signing.dumps(token_data)
+        # Token expires in 1 day
+        signer = signing.TimestampSigner()
+        token = signer.sign_object(token_data)  # Signs + serializes with timestamp
 
         return Response({"token": token})
 
@@ -235,7 +236,7 @@ class CreateCharacterViewToken(GenericAPIView):
     """
 
     serializer_class = CharacterSerializer
-
+    permission_classes = (AllowAny,)
     def generate_token(server_id: str) -> str:
         data = {"server_id": server_id, "nonce": secrets.token_hex(8), "uuid": str(uuid.uuid4())}
         return signing.dumps(data)
@@ -249,9 +250,14 @@ class CreateCharacterViewToken(GenericAPIView):
             return Response({"error": "Missing X-Character-Token header"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            parsed = signing.loads(token)
+            signer = signing.TimestampSigner()
+            parsed = signer.unsign_object(token, max_age=86400)  # 1 day in seconds
+        except signing.SignatureExpired:
+            # Token expired
+            return Response({"error": "Token has expired."}, status=status.HTTP_401_UNAUTHORIZED)
         except signing.BadSignature:
-            return Response({"error": "Invalid or tampered token"}, status=status.HTTP_400_BAD_REQUEST)
+            # Token invalid
+            return Response({"error": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
 
         server_id = parsed.get("server_id")
         account_uuid = parsed.get("uuid")
@@ -292,16 +298,22 @@ class DeleteCharacterViewToken(GenericAPIView):
     """
 
     serializer_class = CharacterSerializer
-
+    permission_classes = (AllowAny,)
     def delete(self, request, pk):
         token = request.headers.get("X-Character-Token")
         if not token:
             return Response({"error": "Missing X-Character-Token header"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            parsed = signing.loads(token)
+            signer = signing.TimestampSigner()
+            parsed = signer.unsign_object(token, max_age=86400)  # 1 day in seconds
+        except signing.SignatureExpired:
+            # Token expired
+            return Response({"error": "Token has expired."}, status=status.HTTP_401_UNAUTHORIZED)
         except signing.BadSignature:
-            return Response({"error": "Invalid or tampered token"}, status=status.HTTP_400_BAD_REQUEST)
+            # Token invalid
+            return Response({"error": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
+
 
         server_id = parsed.get("server_id")
         account_uuid = parsed.get("uuid")
@@ -334,113 +346,125 @@ class DeleteCharacterViewToken(GenericAPIView):
         return Response({"success": "Character deleted successfully!"}, status=status.HTTP_200_OK)
 
 
+
 class GetCompatibleCharactersToken(ListAPIView):
     """
     Retrieves a list of compatible characters based on the token-provided fork and account.
-
     **Requires 'X-Character-Token' header.**
     """
-
     serializer_class = CharacterSerializer
+    permission_classes = (AllowAny,)
 
     def get_queryset(self):
         token = self.request.headers.get("X-Character-Token")
         if not token:
-            raise ValidationError({"token": "Missing X-Character-Token header"})
+            raise ValidationError({"token": ["Missing X-Character-Token header"]})
 
         try:
-            parsed = signing.loads(token)
+            signer = signing.TimestampSigner()
+            parsed = signer.unsign_object(token, max_age=86400)  # 1 day in seconds
+        except signing.SignatureExpired:
+            # Token expired
+            return Response({"error": "Token has expired."}, status=status.HTTP_401_UNAUTHORIZED)
         except signing.BadSignature:
-            raise ValidationError({"token": "Invalid or tampered token"})
+            # Token invalid
+            return Response({"error": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
 
         server_id = parsed.get("server_id")
         account_uuid = parsed.get("uuid")
-
         if not server_id or not account_uuid:
-            raise ValidationError({"token": "Token missing required fields"})
+            raise ValidationError({"token": ["Token missing required fields"]})
 
         try:
             account = Account.objects.get(unique_identifier=account_uuid)
         except Account.DoesNotExist:
-            raise ValidationError({"account": "Account not found"})
+            raise ValidationError({"account": ["Account not found"]})
 
-        # Only expect character_sheet_version from the query
+        # Add fork_compatibility from the token and character_sheet_version from query
         query_data = {
-            "character_sheet_version": self.request.query_params.get("character_sheet_version")
+            "character_sheet_version": self.request.query_params.get("character_sheet_version"),
+            "fork_compatibility": server_id
         }
-
         query_serializer = CompatibleCharactersRequestSerializer(data=query_data)
-        if not query_serializer.is_valid():
-            raise ValidationError(query_serializer.errors)
+        query_serializer.is_valid(raise_exception=True)
 
         character_sheet_version = query_serializer.validated_data["character_sheet_version"]
 
-        queryset = Character.objects.filter(
+        return Character.objects.filter(
             account=account,
             fork_compatibility=server_id,
             character_sheet_version=character_sheet_version,
         )
-
-        return queryset
-
 class UpdateCharacterViewToken(GenericAPIView):
     """
     Updates a character by its ID using token-based authentication.
-
+    If it does not exist, creates it.
     **Requires 'X-Character-Token' header.**
     """
-
     serializer_class = UpdateCharacterSerializer
     queryset = Character.objects.all()
+    permission_classes = (AllowAny,)
 
-    def update_character(self, request, pk):
+    def update_or_create_character(self, request, pk):
+        # Get token
         token = request.headers.get("X-Character-Token")
         if not token:
             return Response({"error": "Missing X-Character-Token header"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            parsed = signing.loads(token)
+            signer = signing.TimestampSigner()
+            parsed =signer.unsign_object(token, max_age=86400)  # 1 day in seconds
+        except signing.SignatureExpired:
+            # Token expired
+            return Response({"error": "Token has expired."}, status=status.HTTP_401_UNAUTHORIZED)
         except signing.BadSignature:
-            return Response({"error": "Invalid or tampered token"}, status=status.HTTP_400_BAD_REQUEST)
+            # Token invalid
+            return Response({"error": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
 
         server_id = parsed.get("server_id")
         account_uuid = parsed.get("uuid")
-
         if not server_id or not account_uuid:
             return Response({"error": "Token missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Look up account
+        # Get account
         try:
             account = Account.objects.get(unique_identifier=account_uuid)
         except Account.DoesNotExist:
             return Response({"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Look up character
+        # Try to get character, otherwise create a new one
         try:
             character = Character.objects.get(pk=pk)
+            is_new = False
         except Character.DoesNotExist:
-            return Response({"error": "No character with this ID could be found!"}, status=status.HTTP_404_NOT_FOUND)
+            character = None
+            is_new = True
 
-        # Check if the character belongs to the token-provided account
-        if character.account != account:
-            return Response({"error": "You do not have permission to edit this character!"},
-                            status=status.HTTP_403_FORBIDDEN)
+        # If updating, check ownership and fork compatibility
+        if not is_new:
+            if character.account != account:
+                return Response({"error": "You do not have permission to edit this character!"}, status=status.HTTP_403_FORBIDDEN)
+            if character.fork_compatibility != server_id:
+                return Response({"error": "This character does not match the server/fork in the token!"}, status=status.HTTP_403_FORBIDDEN)
 
-        # Check fork match
-        if character.fork_compatibility != server_id:
-            return Response({"error": "This character does not match the server/fork in the token!"},
-                            status=status.HTTP_403_FORBIDDEN)
+        # Force account and fork_compatibility from token (both on create and update)
+        incoming_data = request.data.copy()
+        incoming_data["account"] = account.pk
+        incoming_data["fork_compatibility"] = server_id
 
-        # Proceed with update
-        serializer = self.get_serializer(character, data=request.data, partial=True)
+        if is_new:
+            serializer = self.get_serializer(data=incoming_data)
+        else:
+            serializer = self.get_serializer(character, data=incoming_data, partial=True)
+
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED if is_new else status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, pk):
-        return self.update_character(request, pk)
+        return self.update_or_create_character(request, pk)
 
     def put(self, request, pk):
-        return self.update_character(request, pk)
+        return self.update_or_create_character(request, pk)

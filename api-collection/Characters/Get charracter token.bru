@@ -1,0 +1,21 @@
+meta {
+  name: Get charracter token
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://127.0.0.1:8000/persistence/characters/GenForkToken
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Token 7cac756254c5574dbdd69e2129394337158b7929446576ede3fb2a43e179540c
+}
+
+body:json {
+  {
+    "fork_compatibility": "UnityStationDevelop"
+  }
+}

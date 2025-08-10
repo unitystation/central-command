@@ -1,22 +1,25 @@
 import logging
 import secrets
 
+from datetime import timedelta
 from urllib.parse import urljoin
 from uuid import uuid4
-from knox.auth import TokenAuthentication
+
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.management import BaseCommand
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
+from knox.auth import TokenAuthentication
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
-from rest_framework import serializers, status
 
 from commons.error_response import ErrorResponse
 from commons.mail_wrapper import send_email_with_template
@@ -32,9 +35,6 @@ from .serializers import (
     UpdateAccountSerializer,
     VerifyAccountSerializer,
 )
-
-from django.utils import timezone
-from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -459,7 +459,6 @@ class CheckSHA512ForAccountView(APIView):
             return Response({"exists": False}, status=status.HTTP_200_OK)
 
         valid_cutoff = timezone.now() - timedelta(minutes=3)
-
         matching_token = SHA512Token.objects.filter(
             account=account,
             token=token,
@@ -468,15 +467,23 @@ class CheckSHA512ForAccountView(APIView):
 
         if matching_token:
             matching_token.delete()
-            return Response({"exists": True}, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "exists": True,
+                    "account": PublicAccountDataSerializer(
+                        account,
+                        context={"request": request}
+                    ).data
+                },
+                status=status.HTTP_200_OK
+            )
         else:
             return Response({"exists": False}, status=status.HTTP_200_OK)
 
+class Command(BaseCommand):
+    help = 'Delete expired SHA512 tokens (older than 3 minutes)'
 
-#class Command(BaseCommand):
-#    help = 'Delete expired SHA512 tokens (older than 3 minutes)'
-#
-#    def handle(self, *args, **kwargs):
-#        cutoff = timezone.now() - timedelta(minutes=3)
-#        deleted, _ = SHA512Token.objects.filter(created_at__lt=cutoff).delete()
-#        self.stdout.write(f"Deleted {deleted} expired SHA512 tokens.")
+    def handle(self, *args, **kwargs):
+        cutoff = timezone.now() - timedelta(minutes=3)
+        deleted, _ = SHA512Token.objects.filter(created_at__lt=cutoff).delete()
+        self.stdout.write(f"Deleted {deleted} expired SHA512 tokens.")
