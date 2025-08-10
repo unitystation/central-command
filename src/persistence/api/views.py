@@ -135,8 +135,6 @@ class UpdateCharacterView(GenericAPIView):
         return self.update_character(request, pk)
 
 
-
-
 class DeleteCharacterView(GenericAPIView):
     """
     Deletes a character by its ID. The character must belong to the account of the user.
@@ -196,21 +194,20 @@ class GenerateForkTokenView(GenericAPIView):
     Generates a token for the fork/server and account identifier.
     **Requires token in 'X-Character-Token' header.**
     """
+
     serializer_class = CharacterSerializer
 
     def post(self, request):
         server_id = request.data.get("fork_compatibility")
         if not server_id:
             return Response(
-                {"error": "Missing 'fork_compatibility' in request body."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Missing 'fork_compatibility' in request body."}, status=status.HTTP_400_BAD_REQUEST
             )
 
         user = request.user
         if not hasattr(user, "unique_identifier"):
             return Response(
-                {"error": "Authenticated user lacks a unique identifier."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Authenticated user lacks a unique identifier."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
         token_data = {
@@ -226,7 +223,6 @@ class GenerateForkTokenView(GenericAPIView):
         return Response({"token": token})
 
 
-
 class CreateCharacterViewToken(GenericAPIView):
     """
     Creates a new character based on the token which embeds
@@ -237,11 +233,12 @@ class CreateCharacterViewToken(GenericAPIView):
 
     serializer_class = CharacterSerializer
     permission_classes = (AllowAny,)
+
     def generate_token(self, server_id: str) -> str:
         data = {"server_id": server_id, "nonce": secrets.token_hex(8), "uuid": str(uuid.uuid4())}
         return signing.dumps(data)
 
-    def parse_token(self,token: str) -> dict:
+    def parse_token(self, token: str) -> dict:
         return signing.loads(token)
 
     def post(self, request):
@@ -283,10 +280,13 @@ class CreateCharacterViewToken(GenericAPIView):
         except ValidationError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionDenied:
-            return Response({"error": "You do not have permission to write this data!"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "You do not have permission to write this data!"}, status=status.HTTP_403_FORBIDDEN
+            )
 
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 class DeleteCharacterViewToken(GenericAPIView):
     """
@@ -299,6 +299,7 @@ class DeleteCharacterViewToken(GenericAPIView):
 
     serializer_class = CharacterSerializer
     permission_classes = (AllowAny,)
+
     def delete(self, request, pk):
         token = request.headers.get("X-Character-Token")
         if not token:
@@ -313,7 +314,6 @@ class DeleteCharacterViewToken(GenericAPIView):
         except signing.BadSignature:
             # Token invalid
             return Response({"error": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
-
 
         server_id = parsed.get("server_id")
         account_uuid = parsed.get("uuid")
@@ -335,16 +335,18 @@ class DeleteCharacterViewToken(GenericAPIView):
 
         # Check ownership and fork
         if character.account != account:
-            return Response({"error": "You do not have permission to delete this character!"},
-                            status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "You do not have permission to delete this character!"}, status=status.HTTP_403_FORBIDDEN
+            )
 
         if character.fork_compatibility != server_id:
-            return Response({"error": "This character does not match the server/fork in the token!"},
-                            status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "This character does not match the server/fork in the token!"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         character.delete()
         return Response({"success": "Character deleted successfully!"}, status=status.HTTP_200_OK)
-
 
 
 class GetCompatibleCharactersToken(ListAPIView):
@@ -352,6 +354,7 @@ class GetCompatibleCharactersToken(ListAPIView):
     Retrieves a list of compatible characters based on the token-provided fork and account.
     **Requires 'X-Character-Token' header.**
     """
+
     serializer_class = CharacterSerializer
     permission_classes = (AllowAny,)
 
@@ -383,7 +386,7 @@ class GetCompatibleCharactersToken(ListAPIView):
         # Add fork_compatibility from the token and character_sheet_version from query
         query_data = {
             "character_sheet_version": self.request.query_params.get("character_sheet_version"),
-            "fork_compatibility": server_id
+            "fork_compatibility": server_id,
         }
         query_serializer = CompatibleCharactersRequestSerializer(data=query_data)
         query_serializer.is_valid(raise_exception=True)
@@ -395,12 +398,15 @@ class GetCompatibleCharactersToken(ListAPIView):
             fork_compatibility=server_id,
             character_sheet_version=character_sheet_version,
         )
+
+
 class UpdateCharacterViewToken(GenericAPIView):
     """
     Updates a character by its ID using token-based authentication.
     If it does not exist, creates it.
     **Requires 'X-Character-Token' header.**
     """
+
     serializer_class = UpdateCharacterSerializer
     queryset = Character.objects.all()
     permission_classes = (AllowAny,)
@@ -413,7 +419,7 @@ class UpdateCharacterViewToken(GenericAPIView):
 
         try:
             signer = signing.TimestampSigner()
-            parsed =signer.unsign_object(token, max_age=86400)  # 1 day in seconds
+            parsed = signer.unsign_object(token, max_age=86400)  # 1 day in seconds
         except signing.SignatureExpired:
             # Token expired
             return Response({"error": "Token has expired."}, status=status.HTTP_401_UNAUTHORIZED)
@@ -439,7 +445,6 @@ class UpdateCharacterViewToken(GenericAPIView):
         except Character.DoesNotExist:
             character = None
             is_new = True
-
 
         # If updating, check ownership and fork compatibility
         if not is_new and character is not None:

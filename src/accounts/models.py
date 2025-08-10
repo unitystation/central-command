@@ -39,8 +39,7 @@ class Account(AbstractUser):
         unique=False,
         validators=[MinLengthValidator(3), UnicodeUsernameValidator()],
         help_text=(
-            "Public username is used to identify your account publicly and shows in "
-            "OOC. This can be changed at any time"
+            "Public username is used to identify your account publicly and shows in OOC. This can be changed at any time"
         ),
     )
 
@@ -134,9 +133,10 @@ class PasswordResetRequestModel(models.Model):
             return False
         return (self.created_at + timedelta(minutes=settings.PASS_RESET_TOKEN_TTL)) > timezone.now()
 
+
 class SHA512Token(models.Model):
     token = models.CharField(max_length=128)
-    account = models.ForeignKey(Account, related_name='sha512_tokens', on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, related_name="sha512_tokens", on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

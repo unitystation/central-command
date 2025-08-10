@@ -373,8 +373,8 @@ class ResendAccountConfirmationView(GenericAPIView):
         else:
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-class RegisterSHA512ForAccount(APIView):
 
+class RegisterSHA512ForAccount(APIView):
     class InputSerializer(serializers.Serializer):
         sha512_token = serializers.CharField(max_length=128)
 
@@ -393,10 +393,7 @@ class RegisterSHA512ForAccount(APIView):
         if not serializer.is_valid():
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-        SHA512Token.objects.create(
-            account=user,
-            token=serializer.validated_data["sha512_token"]
-        )
+        SHA512Token.objects.create(account=user, token=serializer.validated_data["sha512_token"])
 
         return Response(
             {"detail": "SHA512 token registered successfully."},
@@ -411,6 +408,7 @@ class CheckSHA512ForAccountView(APIView):
     Deletes the token after checking.
     **Public endpoint**
     """
+
     permission_classes = (AllowAny,)
 
     class InputSerializer(serializers.Serializer):
@@ -440,20 +438,15 @@ class CheckSHA512ForAccountView(APIView):
         if matching_token:
             matching_token.delete()
             return Response(
-                {
-                    "exists": True,
-                    "account": PublicAccountDataSerializer(
-                        account,
-                        context={"request": request}
-                    ).data
-                },
-                status=status.HTTP_200_OK
+                {"exists": True, "account": PublicAccountDataSerializer(account, context={"request": request}).data},
+                status=status.HTTP_200_OK,
             )
         else:
             return Response({"exists": False}, status=status.HTTP_200_OK)
 
+
 class Command(BaseCommand):
-    help = 'Delete expired SHA512 tokens (older than 3 minutes)'
+    help = "Delete expired SHA512 tokens (older than 3 minutes)"
 
     def handle(self, *args, **kwargs):
         cutoff = timezone.now() - timedelta(minutes=3)
