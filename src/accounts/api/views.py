@@ -9,7 +9,6 @@ from django.conf import settings
 from django.core import signing
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.core.management import BaseCommand
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from knox.models import AuthToken
@@ -456,12 +455,3 @@ class RedeemSessionView(APIView):
             )
         else:
             return Response("Token is invalid.", status=status.HTTP_401_UNAUTHORIZED)
-
-
-class Command(BaseCommand):
-    help = "Delete expired connection challenges (older than 3 minutes)"
-
-    def handle(self, *args, **kwargs):
-        cutoff = timezone.now() - timedelta(minutes=3)
-        deleted, _ = ConnectionChallenge.objects.filter(created_at__lt=cutoff).delete()
-        self.stdout.write(f"Deleted {deleted} expired connection challenges.")
