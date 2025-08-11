@@ -399,9 +399,15 @@ class AuthRequestView(APIView):
         if not serializer.is_valid():
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
+        if ConnectionChallenge.objects.filter(connection_challenge=serializer.validated_data["connection_challenge"]).count() > 0:
+            return ErrorResponse(
+                "Connection challenge reuse is prohibited.",
+                status.HTTP_400_BAD_REQUEST,
+            )
+
         ConnectionChallenge.objects.create(
             account=user,
-            connection_challenge=serializer.validated_data["connection_challenge"], 
+            connection_challenge=serializer.validated_data["connection_challenge"],
         )
 
         scope_token_data = {

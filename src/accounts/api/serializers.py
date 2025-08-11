@@ -103,4 +103,5 @@ class ConnectionChallengeSerializer(serializers.Serializer):
     connection_challenge = serializers.CharField(min_length=128, max_length=128)
 
 class AuthRequestSerializer(ConnectionChallengeSerializer):
-    fork_compatibility = serializers.CharField(required=False, allow_blank=True, max_length=64)
+    #previously used to be allow_blank but blank seems to get interpreted as not being present, which causes 
+    fork_compatibility = serializers.CharField(max_length=64)

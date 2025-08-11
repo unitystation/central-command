@@ -30,7 +30,14 @@ class GetCharacterByIdView(GenericAPIView):
     def get(self, request, pk):
         try:
             # should compatibility be checked here?
-            character = Character.objects.get(pk=pk, fork_compatibility=request.fork_compatibility)
+            query = {
+                "pk": pk,
+            }
+
+            if hasattr(request, "fork_compatibility"):
+                query["fork_compatibility"] = request.fork_compatibility
+
+            character = Character.objects.get(**query)
         except ObjectDoesNotExist:
             data = {"error": "No character with this ID could be found!"}
             return Response(data, status=status.HTTP_404_NOT_FOUND)
@@ -114,7 +121,7 @@ class UpdateCharacterView(GenericAPIView):
             character = Character.objects.get(pk=pk)
             if character.account != request.user:
                 raise PermissionDenied
-            if request.fork_compatibility and character.fork_compatibility != request.fork_compatibility:
+            if hasattr(request, "fork_compatibility") and character.fork_compatibility != request.fork_compatibility:
                 raise PermissionDenied("This character does not match the server/fork in the token!")
 
         except ObjectDoesNotExist:
@@ -153,7 +160,7 @@ class DeleteCharacterView(GenericAPIView):
             character = Character.objects.get(pk=pk)
             if character.account != request.user:
                 raise PermissionDenied
-            if request.fork_compatibility and character.fork_compatibility != request.fork_compatibility:
+            if hasattr(request, "fork_compatibility") and character.fork_compatibility != request.fork_compatibility:
                 raise PermissionDenied("This character does not match the server/fork in the token!")
 
         except ObjectDoesNotExist:
@@ -181,7 +188,7 @@ class CreateCharacterView(GenericAPIView):
     def post(self, request):
         data_with_account = request.data.copy()
         data_with_account["account"] = request.user.pk
-        if request.fork_compatibility:
+        if hasattr(request, "fork_compatibility"):
             data_with_account["fork_compatibility"] = request.fork_compatibility # Enforce fork from token
 
         serializer = self.serializer_class(data=data_with_account)
