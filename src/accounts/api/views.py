@@ -378,6 +378,12 @@ class ResendAccountConfirmationView(GenericAPIView):
 
 
 class AuthRequestView(APIView):
+    """
+    Given a connection challenge and fork compatibility, registers a connection challenge
+    for the authenticated user and returns a signed scope token.
+
+    **Requires Token authentication**
+    """
 
     serializerClass = AuthRequestSerializer
 
@@ -415,9 +421,10 @@ class AuthRequestView(APIView):
 
 class RedeemSessionView(APIView):
     """
-    Given an account unique_identifier and a SHA512 token,
-    checks if the token is associated with that account.
+    Given an account unique_identifier and a connection challenge,
+    checks if the token is associated with that account, returning it if so.
     Deletes the token after checking.
+
     **Public endpoint**
     """
 

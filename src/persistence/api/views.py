@@ -1,15 +1,9 @@
-import secrets
-import uuid
-
-from django.core import signing
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import GenericAPIView, ListAPIView
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from accounts.models import Account
 from persistence.api.permissions import TokenOrAccount
 
 from ..models import Character
@@ -51,7 +45,7 @@ class GetCompatibleCharacters(ListAPIView):
     """
     Retrieves a list of compatible characters for the user's account.
 
-    **Requires Token Authentication.**
+    **Requires Token Authentication or Scope Token.**
     """
 
     serializer_class = CharacterSerializer
@@ -89,7 +83,7 @@ class GetAllCharactersByAccountView(ListAPIView):
     """
     Retrieves a list of all characters of an account, disregarding compatibility.
 
-    **Requires Token Authentication.**
+    **Requires Token Authentication or Scope Token.**
     """
 
     serializer_class = CharacterSerializer
@@ -108,7 +102,7 @@ class UpdateCharacterView(GenericAPIView):
     """
     Updates a character by its ID. The character must belong to the account of the user.
 
-    **Requires Token Authentication.**
+    **Requires Token Authentication or Scope Token.**
     """
 
     serializer_class = UpdateCharacterSerializer
@@ -148,7 +142,7 @@ class DeleteCharacterView(GenericAPIView):
     """
     Deletes a character by its ID. The character must belong to the account of the user.
 
-    **Requires Token Authentication.**
+    **Requires Token Authentication or Scope Token.**
     """
 
     serializer_class = CharacterSerializer
@@ -178,7 +172,7 @@ class CreateCharacterView(GenericAPIView):
     """
     Creates a new character.
 
-    **Requires Token Authentication.**
+    **Requires Token Authentication or Scope Token.**
     """
 
     serializer_class = CharacterSerializer
