@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 from uuid import uuid4
 
 from django.conf import settings
+from django.core import signing
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.management import BaseCommand
@@ -13,7 +14,7 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
-from rest_framework import serializers, status
+from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -23,8 +24,10 @@ from rest_framework.views import APIView
 from commons.error_response import ErrorResponse
 from commons.mail_wrapper import send_email_with_template
 
-from ..models import Account, AccountConfirmation, PasswordResetRequestModel, SHA512Token
+from ..models import Account, AccountConfirmation, PasswordResetRequestModel, ConnectionChallenge
 from .serializers import (
+    AuthRequestSerializer,
+    ConnectionChallengeSerializer,
     ConfirmAccountSerializer,
     EmailSerializer,
     LoginWithCredentialsSerializer,
@@ -347,7 +350,7 @@ class ResendAccountConfirmationView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = EmailSerializer
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         serializer: EmailSerializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
@@ -374,14 +377,12 @@ class ResendAccountConfirmationView(GenericAPIView):
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
-class RegisterSHA512ForAccount(APIView):
-    class InputSerializer(serializers.Serializer):
-        sha512_token = serializers.CharField(max_length=128)
+class AuthRequestView(APIView):
 
-    def post(self, request, *args, **kwargs):
+    serializerClass = AuthRequestSerializer
+
+    def post(self, request):
         user: Account = request.user
-        if not request.auth:
-            return ErrorResponse("Invalid or missing token.", status.HTTP_401_UNAUTHORIZED)
 
         if not user.is_confirmed:
             return ErrorResponse(
@@ -389,19 +390,30 @@ class RegisterSHA512ForAccount(APIView):
                 status.HTTP_403_FORBIDDEN,
             )
 
-        serializer = self.InputSerializer(data=request.data)
+        serializer: AuthRequestSerializer = self.serializerClass(data=request.data)
         if not serializer.is_valid():
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-        SHA512Token.objects.create(account=user, token=serializer.validated_data["sha512_token"])
+        ConnectionChallenge.objects.create(
+            account=user,
+            connection_challenge=serializer.validated_data["connection_challenge"], 
+        )
+
+        scope_token_data = {
+            "unique_identifier": user.unique_identifier,
+            "fork_compatibility": serializer.validated_data["fork_compatibility"],
+        }
+
+        signer = signing.TimestampSigner()
+        scope_token = signer.sign_object(scope_token_data)  # Signs + serializes with timestamp
 
         return Response(
-            {"detail": "SHA512 token registered successfully."},
+            {"scopeToken": scope_token},
             status=status.HTTP_200_OK,
         )
 
 
-class CheckSHA512ForAccountView(APIView):
+class RedeemSessionView(APIView):
     """
     Given an account unique_identifier and a SHA512 token,
     checks if the token is associated with that account.
@@ -410,45 +422,39 @@ class CheckSHA512ForAccountView(APIView):
     """
 
     permission_classes = (AllowAny,)
+    serializerClass = ConnectionChallengeSerializer
 
-    class InputSerializer(serializers.Serializer):
-        unique_identifier = serializers.CharField(max_length=28)
-        sha512_token = serializers.CharField(max_length=128)
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.InputSerializer(data=request.data)
+    def post(self, request):
+        serializer: ConnectionChallengeSerializer = self.serializerClass(data=request.data)
         if not serializer.is_valid():
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-        unique_id = serializer.validated_data["unique_identifier"]
-        token = serializer.validated_data["sha512_token"]
+        connection_challenge = serializer.validated_data["connection_challenge"]
 
-        try:
-            account = Account.objects.get(unique_identifier=unique_id)
-        except Account.DoesNotExist:
-            return Response({"exists": False}, status=status.HTTP_200_OK)
+        challenge_object = ConnectionChallenge.objects.filter(connection_challenge=connection_challenge).first()
 
-        valid_cutoff = timezone.now() - timedelta(minutes=3)
-        matching_token = SHA512Token.objects.filter(
-            account=account,
-            token=token,
-            created_at__gte=valid_cutoff,
-        ).first()
+        if challenge_object:
+            valid_cutoff = timezone.now() - timedelta(minutes=3)
 
-        if matching_token:
-            matching_token.delete()
+            if challenge_object.created_at < valid_cutoff:
+                # Token is older than 3 minutes, delete it
+                challenge_object.delete()
+                return ErrorResponse("Token is expired.", status.HTTP_401_UNAUTHORIZED)
+
+            challenge_object.delete()
+
             return Response(
-                {"exists": True, "account": PublicAccountDataSerializer(account, context={"request": request}).data},
+                {"account": PublicAccountDataSerializer(challenge_object.account, context={"request": request}).data},
                 status=status.HTTP_200_OK,
             )
         else:
-            return Response({"exists": False}, status=status.HTTP_200_OK)
+            return Response("Token is invalid.", status=status.HTTP_401_UNAUTHORIZED)
 
 
 class Command(BaseCommand):
-    help = "Delete expired SHA512 tokens (older than 3 minutes)"
+    help = "Delete expired connection challenges (older than 3 minutes)"
 
     def handle(self, *args, **kwargs):
         cutoff = timezone.now() - timedelta(minutes=3)
-        deleted, _ = SHA512Token.objects.filter(created_at__lt=cutoff).delete()
-        self.stdout.write(f"Deleted {deleted} expired SHA512 tokens.")
+        deleted, _ = ConnectionChallenge.objects.filter(created_at__lt=cutoff).delete()
+        self.stdout.write(f"Deleted {deleted} expired connection challenges.")

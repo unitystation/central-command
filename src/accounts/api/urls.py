@@ -2,12 +2,12 @@ from django.urls import path
 from knox import views as knox_views
 
 from .views import (
-    CheckSHA512ForAccountView,
+    RedeemSessionView,
     ConfirmAccountView,
     LoginWithCredentialsView,
     LoginWithTokenView,
     RegisterAccountView,
-    RegisterSHA512ForAccount,
+    AuthRequestView,
     RequestPasswordResetView,
     RequestVerificationTokenView,
     ResendAccountConfirmationView,
@@ -47,6 +47,6 @@ urlpatterns = [
         name="reset-password-token",
     ),
     path("reset-password/", RequestPasswordResetView.as_view(), name="reset-password"),
-    path("register-SHA512-for-account/", RegisterSHA512ForAccount.as_view(), name="register-SHA512-for-account"),
-    path("check-SHA512-for-account/", CheckSHA512ForAccountView.as_view(), name="check-SHA512-for-account"),
+    path("auth-request/", AuthRequestView.as_view(), name="auth-request"),
+    path("redeem-session/", RedeemSessionView.as_view(), name="redeem-session"),
 ]

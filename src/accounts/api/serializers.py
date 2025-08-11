@@ -98,3 +98,9 @@ class ConfirmAccountSerializer(serializers.Serializer):
 
 class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
+class ConnectionChallengeSerializer(serializers.Serializer):
+    connection_challenge = serializers.CharField(min_length=128, max_length=128)
+
+class AuthRequestSerializer(ConnectionChallengeSerializer):
+    fork_compatibility = serializers.CharField(required=False, allow_blank=True, max_length=64)
