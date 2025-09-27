@@ -98,3 +98,10 @@ class ConfirmAccountSerializer(serializers.Serializer):
 
 class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
+class SHA512InputSerializer(serializers.Serializer):
+        sha512_token = serializers.CharField(max_length=128)
+
+class SHA512IdentifierInputSerializer(serializers.Serializer):
+        unique_identifier = serializers.CharField(max_length=28)
+        sha512_token = serializers.CharField(max_length=128)

@@ -33,6 +33,8 @@ from .serializers import (
     ResetPasswordSerializer,
     UpdateAccountSerializer,
     VerifyAccountSerializer,
+    SHA512InputSerializer,
+    SHA512IdentifierInputSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -375,13 +377,8 @@ class ResendAccountConfirmationView(GenericAPIView):
 
 
 class RegisterSHA512ForAccount(APIView):
-    class InputSerializer(serializers.Serializer):
-        sha512_token = serializers.CharField(max_length=128)
-
     def post(self, request, *args, **kwargs):
         user: Account = request.user
-        if not request.auth:
-            return ErrorResponse("Invalid or missing token.", status.HTTP_401_UNAUTHORIZED)
 
         if not user.is_confirmed:
             return ErrorResponse(
@@ -389,7 +386,7 @@ class RegisterSHA512ForAccount(APIView):
                 status.HTTP_403_FORBIDDEN,
             )
 
-        serializer = self.InputSerializer(data=request.data)
+        serializer = SHA512InputSerializer(data=request.data)
         if not serializer.is_valid():
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
@@ -411,12 +408,8 @@ class CheckSHA512ForAccountView(APIView):
 
     permission_classes = (AllowAny,)
 
-    class InputSerializer(serializers.Serializer):
-        unique_identifier = serializers.CharField(max_length=28)
-        sha512_token = serializers.CharField(max_length=128)
-
     def post(self, request, *args, **kwargs):
-        serializer = self.InputSerializer(data=request.data)
+        serializer = SHA512IdentifierInputSerializer(data=request.data)
         if not serializer.is_valid():
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 

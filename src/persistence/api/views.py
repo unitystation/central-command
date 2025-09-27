@@ -192,14 +192,14 @@ class CreateCharacterView(GenericAPIView):
 class GenerateForkTokenView(GenericAPIView):
     """
     Generates a token for the fork/server and account identifier.
-    **Requires token in 'X-Character-Token' header.**
+    **requires a login to generate against**
     """
 
     serializer_class = CharacterSerializer
 
     def post(self, request):
-        server_id = request.data.get("fork_compatibility")
-        if not server_id:
+        fork_compatibility = request.data.get("fork_compatibility")
+        if not fork_compatibility:
             return Response(
                 {"error": "Missing 'fork_compatibility' in request body."}, status=status.HTTP_400_BAD_REQUEST
             )
@@ -211,8 +211,8 @@ class GenerateForkTokenView(GenericAPIView):
             )
 
         token_data = {
-            "server_id": server_id,
-            "uuid": str(user.unique_identifier),
+            "fork_compatibility": fork_compatibility,
+            "unique_identifier": user.unique_identifier,
             "nonce": secrets.token_hex(8),
         }
 
@@ -234,13 +234,6 @@ class CreateCharacterViewToken(GenericAPIView):
     serializer_class = CharacterSerializer
     permission_classes = (AllowAny,)
 
-    def generate_token(self, server_id: str) -> str:
-        data = {"server_id": server_id, "nonce": secrets.token_hex(8), "uuid": str(uuid.uuid4())}
-        return signing.dumps(data)
-
-    def parse_token(self, token: str) -> dict:
-        return signing.loads(token)
-
     def post(self, request):
         token = request.headers.get("X-Character-Token")
         if not token:
@@ -256,24 +249,24 @@ class CreateCharacterViewToken(GenericAPIView):
             # Token invalid
             return Response({"error": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        server_id = parsed.get("server_id")
-        account_uuid = parsed.get("uuid")
+        fork_compatibility = parsed.get("fork_compatibility")
+        account_uuid = parsed.get("unique_identifier")
 
-        if not server_id or not account_uuid:
-            return Response({"error": "Token missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+        if not fork_compatibility or not account_uuid:
+            return Response({"error": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
 
         # Look up account by UUID
         try:
             account = Account.objects.get(unique_identifier=account_uuid)
         except Account.DoesNotExist:
-            return Response({"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
 
         data_with_extras = request.data.copy()
         data_with_extras["account"] = account.pk
-        data_with_extras["fork_compatibility"] = server_id  # Enforce fork from token
+        data_with_extras["fork_compatibility"] = fork_compatibility  # Enforce fork from token
 
         serializer = self.serializer_class(data=data_with_extras)
-        serializer.account = account  # type: ignore
+        serializer.account = account
 
         try:
             serializer.is_valid(raise_exception=True)
@@ -315,10 +308,10 @@ class DeleteCharacterViewToken(GenericAPIView):
             # Token invalid
             return Response({"error": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        server_id = parsed.get("server_id")
-        account_uuid = parsed.get("uuid")
+        fork_compatibility = parsed.get("fork_compatibility")
+        account_uuid = parsed.get("unique_identifier")
 
-        if not server_id or not account_uuid:
+        if not fork_compatibility or not account_uuid:
             return Response({"error": "Token missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Look up account
@@ -339,7 +332,7 @@ class DeleteCharacterViewToken(GenericAPIView):
                 {"error": "You do not have permission to delete this character!"}, status=status.HTTP_403_FORBIDDEN
             )
 
-        if character.fork_compatibility != server_id:
+        if character.fork_compatibility != fork_compatibility:
             return Response(
                 {"error": "This character does not match the server/fork in the token!"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -373,9 +366,9 @@ class GetCompatibleCharactersToken(ListAPIView):
             # Token invalid
             return Response({"error": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        server_id = parsed.get("server_id")
-        account_uuid = parsed.get("uuid")
-        if not server_id or not account_uuid:
+        fork_compatibility = parsed.get("fork_compatibility")
+        account_uuid = parsed.get("unique_identifier")
+        if not fork_compatibility or not account_uuid:
             raise ValidationError({"token": ["Token missing required fields"]})
 
         try:
@@ -386,7 +379,7 @@ class GetCompatibleCharactersToken(ListAPIView):
         # Add fork_compatibility from the token and character_sheet_version from query
         query_data = {
             "character_sheet_version": self.request.query_params.get("character_sheet_version"),
-            "fork_compatibility": server_id,
+            "fork_compatibility": account_uuid,
         }
         query_serializer = CompatibleCharactersRequestSerializer(data=query_data)
         query_serializer.is_valid(raise_exception=True)
@@ -395,7 +388,7 @@ class GetCompatibleCharactersToken(ListAPIView):
 
         return Character.objects.filter(
             account=account,
-            fork_compatibility=server_id,
+            fork_compatibility=account_uuid,
             character_sheet_version=character_sheet_version,
         )
 
@@ -427,9 +420,9 @@ class UpdateCharacterViewToken(GenericAPIView):
             # Token invalid
             return Response({"error": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        server_id = parsed.get("server_id")
-        account_uuid = parsed.get("uuid")
-        if not server_id or not account_uuid:
+        fork_compatibility = parsed.get("fork_compatibility")
+        account_uuid = parsed.get("unique_identifier")
+        if not fork_compatibility or not account_uuid:
             return Response({"error": "Token missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Get account
@@ -452,7 +445,7 @@ class UpdateCharacterViewToken(GenericAPIView):
                 return Response(
                     {"error": "You do not have permission to edit this character!"}, status=status.HTTP_403_FORBIDDEN
                 )
-            if character.fork_compatibility != server_id:
+            if character.fork_compatibility != fork_compatibility:
                 return Response(
                     {"error": "This character does not match the server/fork in the token!"},
                     status=status.HTTP_403_FORBIDDEN,
@@ -461,7 +454,7 @@ class UpdateCharacterViewToken(GenericAPIView):
         # Force account and fork_compatibility from token (both on create and update)
         incoming_data = request.data.copy()
         incoming_data["account"] = account.pk
-        incoming_data["fork_compatibility"] = server_id
+        incoming_data["fork_compatibility"] = fork_compatibility
 
         if is_new:
             serializer = self.get_serializer(data=incoming_data)
