@@ -12,7 +12,7 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
-from rest_framework import serializers, status
+from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
