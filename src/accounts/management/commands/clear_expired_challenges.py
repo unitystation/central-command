@@ -9,6 +9,7 @@ from accounts.models import SHA512Token
 
 logger = logging.getLogger(__name__)
 
+
 class Command(BaseCommand):
     help = "Delete expired SHA512 tokens (older than 3 minutes)"
 

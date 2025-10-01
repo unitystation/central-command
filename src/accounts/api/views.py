@@ -435,4 +435,3 @@ class CheckSHA512ForAccountView(APIView):
             )
         else:
             return Response({"exists": False}, status=status.HTTP_200_OK)
-
