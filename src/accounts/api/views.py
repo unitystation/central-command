@@ -8,7 +8,6 @@ from uuid import uuid4
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.core.management import BaseCommand
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from knox.models import AuthToken
