@@ -30,10 +30,10 @@ from .serializers import (
     PublicAccountDataSerializer,
     RegisterAccountSerializer,
     ResetPasswordSerializer,
+    SHA512IdentifierInputSerializer,
+    SHA512InputSerializer,
     UpdateAccountSerializer,
     VerifyAccountSerializer,
-    SHA512InputSerializer,
-    SHA512IdentifierInputSerializer,
 )
 
 logger = logging.getLogger(__name__)
