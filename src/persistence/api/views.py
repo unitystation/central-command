@@ -266,7 +266,6 @@ class CreateCharacterViewToken(GenericAPIView):
         data_with_extras["fork_compatibility"] = fork_compatibility  # Enforce fork from token
 
         serializer = self.serializer_class(data=data_with_extras)
-        serializer.account = account
 
         try:
             serializer.is_valid(raise_exception=True)
