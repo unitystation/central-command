@@ -1,5 +1,4 @@
 import secrets
-import uuid
 
 from django.core import signing
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
