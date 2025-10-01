@@ -437,11 +437,3 @@ class CheckSHA512ForAccountView(APIView):
         else:
             return Response({"exists": False}, status=status.HTTP_200_OK)
 
-
-class Command(BaseCommand):
-    help = "Delete expired SHA512 tokens (older than 3 minutes)"
-
-    def handle(self, *args, **kwargs):
-        cutoff = timezone.now() - timedelta(minutes=3)
-        deleted, _ = SHA512Token.objects.filter(created_at__lt=cutoff).delete()
-        self.stdout.write(f"Deleted {deleted} expired SHA512 tokens.")
