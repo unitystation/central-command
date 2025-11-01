@@ -324,7 +324,7 @@ class ConfirmAccountView(GenericAPIView):
         if not serializer.is_valid():
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-        account_confirmation = AccountConfirmation.objects.get(token=serializer.validated_data["token"])
+        account_confirmation: AccountConfirmation = serializer.validated_data["account_confirmation"]
         account = account_confirmation.account
 
         account.is_confirmed = True

@@ -1,3 +1,6 @@
+from unittest.mock import patch
+
+from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -11,6 +14,7 @@ def get_reset_url(token):
 
 class PasswordResetTest(APITestCase):
     def setUp(self):
+        cache.clear()
         self.valid_account = Account.objects.create_user(
             username="validUser",
             email="validUser@valid.com",
@@ -36,6 +40,16 @@ class PasswordResetTest(APITestCase):
         self.assertEqual(PasswordResetRequestModel.objects.count(), 1)
         password_reset_request = PasswordResetRequestModel.objects.first()
         self.assertIsNotNone(password_reset_request)
+
+    def test_request_password_reset_sends_email(self):
+        data = {"email": "validUser@valid.com"}
+
+        with patch("accounts.api.views.send_email_with_template") as mock_send:
+            response = self.client.post(self.url_request, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called_once()
+        self.assertEqual(mock_send.call_args.kwargs["recipient"], data["email"])
 
     def test_request_password_reset_with_invalid_email(self):
         data = {"email": "invalid@mail.com"}

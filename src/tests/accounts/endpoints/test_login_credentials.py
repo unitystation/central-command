@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -7,6 +8,7 @@ from accounts.models import Account
 
 class LoginCredentialsTest(APITestCase):
     def setUp(self):
+        cache.clear()
         self.url = reverse("account:login-credentials")
         self.valid_account = Account.objects.create_user(
             username="validUser",

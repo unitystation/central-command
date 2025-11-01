@@ -1,7 +1,7 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from uuid import uuid4
 
 from django.core.cache import cache
-from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -39,14 +39,6 @@ def _sample_status_payload(server_token: str) -> dict[str, object]:
     }
 
 
-@override_settings(
-    CACHES={
-        "default": {
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            "LOCATION": "baby-serverlist-tests",
-        }
-    }
-)
 class BabyServerAPITests(APITestCase):
     def setUp(self) -> None:
         self.user = Account.objects.create_user(
@@ -102,6 +94,17 @@ class BabyServerAPITests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_regenerate_token_not_found_returns_404(self) -> None:
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(
+            reverse("baby_serverlist:regenerate-token"),
+            {"server_id": str(uuid4())},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_post_server_status_stores_payload_in_cache(self) -> None:
         baby_server = BabyServer.objects.create(owner=self.user, whitelisted=True)
         payload = _sample_status_payload(baby_server.serverlist_token)
@@ -150,6 +153,12 @@ class BabyServerAPITests(APITestCase):
 
         response = self.client.get(reverse("baby_serverlist:list-owned"))
         self.assertTrue(response.json()[0]["live"])
+
+        stale_time = datetime.now(tz=UTC) - timedelta(seconds=13)
+        set_baby_server_heartbeat(str(baby_server.id), stale_time.isoformat())
+
+        response = self.client.get(reverse("baby_serverlist:list-owned"))
+        self.assertFalse(response.json()[0]["live"])
 
     def test_list_baby_servers_returns_whitelisted_status(self) -> None:
         baby_server = BabyServer.objects.create(owner=self.user, whitelisted=True)
