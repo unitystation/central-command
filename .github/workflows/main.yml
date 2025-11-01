@@ -68,7 +68,7 @@ jobs:
                   cd src
                   uv run manage.py makemigrations --check
                   uv run manage.py migrate
-                  uv run manage.py test tests/
+                  uv run manage.py test
 
     docker:
         needs: [ lint, unit_test ]

@@ -103,6 +103,8 @@ class ListOwnedBabyServersView(ListAPIView):
 class ListBabyServersView(ListAPIView):
     """Return cached status payloads for all baby servers that have reported recently."""
 
+    permission_classes = (AllowAny,)
+
     def list(self, request, *args, **kwargs):
         servers = BabyServer.objects.filter(whitelisted=True)
         server_ids = [str(server.id) for server in servers]
