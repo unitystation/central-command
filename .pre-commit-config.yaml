@@ -13,22 +13,20 @@ repos:
         args: ["--allow-multiple-documents"]
       - id: debug-statements
       - id: trailing-whitespace
-        exclude: >-
-          ^.*.md$
+        exclude: ^.*.md$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.7.0
     hooks:
       - id: ruff
-        args: [ --fix ]
+        args: [--fix]
       - id: ruff-format
 
-  # local mypy because of stub dependencies
   - repo: local
     hooks:
       - id: typecheck
-        name: Typecheck
-        entry: mypy .
-        types: [python]
+        name: Typecheck (uv)
+        entry: uv run mypy
         language: system
         pass_filenames: false
+        args: ["."]
