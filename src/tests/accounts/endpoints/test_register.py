@@ -1,3 +1,6 @@
+from unittest.mock import patch
+
+from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -7,6 +10,7 @@ from accounts.models import Account
 
 class RegisterTest(APITestCase):
     def setUp(self):
+        cache.clear()
         self.url = reverse("account:register")
         self.valid_data = {
             "email": "validUser@valid.com",
@@ -101,3 +105,15 @@ class RegisterTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         created_account = Account.objects.get(email=self.valid_data["email"])
         self.assertFalse(created_account.is_confirmed)
+
+    def test_register_sends_confirmation_email(self):
+        data = self.valid_data.copy()
+        data["email"] = "newuser@example.com"
+        data["unique_identifier"] = "newuser"
+        data["username"] = "newuser"
+
+        with patch("accounts.models.Account.send_confirmation_mail") as mock_send:
+            response = self.client.post(self.url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called_once()
