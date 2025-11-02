@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from typing import cast
 
 from django.core import signing
+from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.permissions import AllowAny
@@ -12,19 +13,38 @@ from rest_framework.response import Response
 from accounts.models import Account
 from baby_serverlist.models import SERVERLIST_TOKEN_SALT, BabyServer
 from commons.cache import (
+    get_baby_server_status,
     get_many_baby_server_statuses,
     set_baby_server_heartbeat,
     set_baby_server_status,
 )
 from commons.error_response import ErrorResponse
 
-from .serializers import RegenerateServerlistTokenSerializer, ServerStatusSerializer
+from .serializers import (
+    BabyServerStatusListSerializer,
+    BabyServerTokenSerializer,
+    OwnedBabyServerSerializer,
+    RegenerateServerlistTokenSerializer,
+    ServerStatusSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
 
+@extend_schema_view(
+    post=extend_schema(
+        request=ServerStatusSerializer,
+        responses={
+            200: OpenApiResponse(description="Status accepted and cached"),
+            400: OpenApiResponse(description="Invalid payload or signature"),
+        },
+    )
+)
 class PostServerStatusView(GenericAPIView):
-    """Accepts signed status payloads from baby servers and stores the latest state in cache."""
+    """Accepts signed status payloads from baby servers and stores the latest state in cache.
+
+    *** Public Endpoint ***
+    """
 
     serializer_class = ServerStatusSerializer
     permission_classes = (AllowAny,)
@@ -59,14 +79,21 @@ class PostServerStatusView(GenericAPIView):
         return Response(status=status.HTTP_200_OK)
 
 
+@extend_schema_view(
+    post=extend_schema(
+        responses={201: BabyServerTokenSerializer},
+    )
+)
 class CreateBabyServerView(GenericAPIView):
-    """Creates a new baby server for the authenticated user and returns the freshly minted token."""
+    """Creates a new baby server for the authenticated user and returns the freshly minted token.
+
+    *** Requires Token Authentication. ***
+    """
 
     queryset = BabyServer.objects.all()
 
     def post(self, request, *args, **kwargs):
         user = cast(Account, request.user)
-
         baby_server = BabyServer.objects.create(owner=user)
 
         return Response(
@@ -79,8 +106,16 @@ class CreateBabyServerView(GenericAPIView):
         )
 
 
+@extend_schema_view(
+    list=extend_schema(
+        responses={200: OwnedBabyServerSerializer(many=True)},
+    )
+)
 class ListOwnedBabyServersView(ListAPIView):
-    """Lists the caller's baby servers with a derived `live` flag based on recent heartbeats."""
+    """Lists the caller's baby servers with a derived `live` flag based on recent heartbeats.
+
+    *** Requires Token Authentication. ***
+    """
 
     def get_queryset(self):
         user = cast(Account, self.request.user)
@@ -94,14 +129,23 @@ class ListOwnedBabyServersView(ListAPIView):
                 "id": str(server.id),
                 "whitelisted": server.whitelisted,
                 "live": server.is_live(),
+                "status": get_baby_server_status(server.id),
             }
             for server in queryset
         ]
         return Response(data, status=status.HTTP_200_OK)
 
 
+@extend_schema_view(
+    list=extend_schema(
+        responses={200: BabyServerStatusListSerializer},
+    )
+)
 class ListBabyServersView(ListAPIView):
-    """Return cached status payloads for all baby servers that have reported recently."""
+    """Return cached status payloads for all baby servers that have reported recently.
+
+    *** Public Endpoint ***
+    """
 
     permission_classes = (AllowAny,)
 
@@ -117,8 +161,16 @@ class ListBabyServersView(ListAPIView):
         return Response({"servers": data}, status=status.HTTP_200_OK)
 
 
+@extend_schema_view(
+    post=extend_schema(
+        responses={200: BabyServerTokenSerializer},
+    )
+)
 class RegenerateServerlistTokenView(GenericAPIView):
-    """Regenerates a server's signed token after validating ownership."""
+    """Regenerates a server's signed token after validating ownership.
+
+    *** Requires Token Authentication. ***
+    """
 
     serializer_class = RegenerateServerlistTokenSerializer
     queryset = BabyServer.objects.all()
