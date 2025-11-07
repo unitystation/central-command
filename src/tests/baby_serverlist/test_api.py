@@ -7,8 +7,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from accounts.models import Account
-from baby_serverlist.models import BabyServer
+from baby_serverlist.models import LIVE_HEARTBEAT_GRACE_SECONDS, BabyServer
 from commons.cache import (
+    BABY_SERVER_HEARTBEAT_TTL_SECONDS,
     get_baby_server_heartbeat,
     get_baby_server_status,
     set_baby_server_heartbeat,
@@ -154,7 +155,9 @@ class BabyServerAPITests(APITestCase):
         response = self.client.get(reverse("baby_serverlist:list-owned"))
         self.assertTrue(response.json()[0]["live"])
 
-        stale_time = datetime.now(tz=UTC) - timedelta(seconds=13)
+        stale_time = datetime.now(tz=UTC) - timedelta(
+            seconds=BABY_SERVER_HEARTBEAT_TTL_SECONDS + LIVE_HEARTBEAT_GRACE_SECONDS + 1
+        )
         set_baby_server_heartbeat(str(baby_server.id), stale_time.isoformat())
 
         response = self.client.get(reverse("baby_serverlist:list-owned"))
@@ -184,3 +187,20 @@ class BabyServerAPITests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(), {"servers": []})
+
+    def test_baby_server_is_live_respects_heartbeat_ttl(self) -> None:
+        baby_server = BabyServer.objects.create(owner=self.user)
+
+        fresh_time = datetime.now(tz=UTC) - timedelta(
+            seconds=BABY_SERVER_HEARTBEAT_TTL_SECONDS + LIVE_HEARTBEAT_GRACE_SECONDS - 1
+        )
+        set_baby_server_heartbeat(str(baby_server.id), fresh_time.isoformat())
+        self.assertTrue(baby_server.is_live())
+
+        stale_time = datetime.now(tz=UTC) - timedelta(
+            seconds=BABY_SERVER_HEARTBEAT_TTL_SECONDS + LIVE_HEARTBEAT_GRACE_SECONDS + 1
+        )
+        set_baby_server_heartbeat(str(baby_server.id), stale_time.isoformat())
+        stored = get_baby_server_heartbeat(str(baby_server.id))
+        self.assertEqual(stored, stale_time.isoformat())
+        self.assertFalse(baby_server.is_live())

@@ -6,9 +6,10 @@ from django.core import signing
 from django.db import models
 
 from accounts.models import Account
-from commons.cache import get_baby_server_heartbeat
+from commons.cache import BABY_SERVER_HEARTBEAT_TTL_SECONDS, get_baby_server_heartbeat
 
 SERVERLIST_TOKEN_SALT = "baby_serverlist.serverlist_token"
+LIVE_HEARTBEAT_GRACE_SECONDS = 2
 
 
 class BabyServer(models.Model):
@@ -40,7 +41,7 @@ class BabyServer(models.Model):
         return signing.dumps(payload, salt=SERVERLIST_TOKEN_SALT)
 
     def is_live(self) -> bool:
-        """Return True when the server has reported within the last 12 seconds."""
+        """Return True when the server has reported within the heartbeat TTL window."""
         heartbeat_iso = get_baby_server_heartbeat(str(self.id))
         if not heartbeat_iso:
             return False
@@ -50,4 +51,7 @@ class BabyServer(models.Model):
             return False
         if heartbeat_time.tzinfo is None:
             heartbeat_time = heartbeat_time.replace(tzinfo=UTC)
-        return datetime.now(tz=UTC) - heartbeat_time <= timedelta(seconds=12)
+
+        # live if last heartbeat within the cache TTL plus a small grace buffer
+        ttl_with_grace = BABY_SERVER_HEARTBEAT_TTL_SECONDS + LIVE_HEARTBEAT_GRACE_SECONDS
+        return datetime.now(tz=UTC) - heartbeat_time <= timedelta(seconds=ttl_with_grace)
