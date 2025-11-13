@@ -91,7 +91,7 @@ class LoginWithCredentialsView(GenericAPIView):
         email = serializer.validated_data["email"]
         password = serializer.validated_data["password"]
 
-        account: Account | None = authenticate(email=email, password=password)  # type: ignore[assignment]
+        account: Account | None = authenticate(email=email, password=password)
 
         if account is None:
             return ErrorResponse(
