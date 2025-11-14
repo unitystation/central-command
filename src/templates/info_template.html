@@ -1,0 +1,28 @@
+{% extends "base_email.html" %}
+
+{% block title %}Unitystation - Information{% endblock %}
+
+{% block header_cell_style %}padding:28px 32px 16px;background:linear-gradient(135deg,#f0f9ff 0%,#dbeafe 100%);border-bottom:1px solid #dbeafe;{% endblock %}
+{% block badge_style %}display:inline-block;padding:4px 12px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;color:#0f172a;background-color:#bfdbfe;border-radius:999px;{% endblock %}
+{% block subtitle_style %}margin:0;color:#1f2937;font-size:15px;{% endblock %}
+{% block body_text_style %}font-size:15px;color:#0f172a;{% endblock %}
+{% block badge_text %}Information{% endblock %}
+{% block header_title %}Hello {{ user_name }},{% endblock %}
+
+{% block body_content %}
+<div style="font-size:16px;color:#0f172a;">
+    {{ body_html|safe }}
+</div>
+{% endblock %}
+
+{% block supplemental %}
+<p class="details" style="border-top:none;padding-top:12px;font-size:13px;color:#64748b;margin:0;">
+    This email is for your information only, no action is required.
+    If you have questions, visit our
+    <a href="https://discord.com/invite/tFcTpBp" style="color:#0f172a;">Discord</a>.
+</p>
+{% endblock %}
+
+{% block signature %}
+Warm regards,<br>The Unitystation Team
+{% endblock %}
