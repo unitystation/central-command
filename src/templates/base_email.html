@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title>{% block title %}Unitystation Notification{% endblock %}</title>
+</head>
+<body style="{% block body_style %}margin:0;padding:0;background-color:#eef1f6;font-family:'Segoe UI',Arial,sans-serif;color:#1f2a37;line-height:1.6;-webkit-text-size-adjust:100%;{% endblock %}">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="{% block outer_table_style %}width:100%;background-color:#eef1f6;border-collapse:collapse;{% endblock %}">
+        <tr>
+            <td align="center" style="{% block outer_cell_style %}padding:32px 16px;{% endblock %}">
+                <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="{% block inner_table_style %}width:100%;max-width:560px;background-color:#ffffff;border-radius:14px;border:1px solid #e1e6ef;box-shadow:0 8px 22px rgba(15,23,42,0.08);overflow:hidden;{% endblock %}">
+                    <tr>
+                        <td style="{% block header_cell_style %}padding:28px 32px 16px;background:linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%);border-bottom:1px solid #e8edf7;{% endblock %}">
+                            <span style="{% block badge_style %}display:inline-block;padding:4px 12px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;color:#475569;background-color:#e2e8f0;border-radius:999px;{% endblock %}">{% block badge_text %}Notification{% endblock %}</span>
+                            <h1 style="{% block title_style %}margin:16px 0 8px;font-size:24px;color:#111827;{% endblock %}">{% block header_title %}Unitystation Update{% endblock %}</h1>
+                            <p style="{% block subtitle_style %}margin:0;color:#4b5563;font-size:15px;{% endblock %}">{% block header_subtitle %}{% endblock %}</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="{% block body_cell_style %}padding:24px 32px 32px;{% endblock %}">
+                            <div style="{% block body_text_style %}font-size:15px;color:#1f2a37;{% endblock %}">
+                                {% block body_content %}{% endblock %}
+                                {% block supplemental %}{% endblock %}
+                                <p style="{% block signature_style %}margin-top:24px;color:#4b5563;{% endblock %}">{% block signature %}The Unitystation Team{% endblock %}</p>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;margin-top:16px;">
+                    <tr>
+                        <td style="{% block footer_style %}text-align:center;font-size:12px;color:#6b7280;line-height:1.5;padding:0 16px;{% endblock %}">
+                            {% block footer_note %}
+                            This is an automated email; please do not reply. Contact us at
+                            <a href="mailto:info@unitystation.org" style="color:#2f3d56;">info@unitystation.org</a> if you need assistance.
+                            {% endblock %}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

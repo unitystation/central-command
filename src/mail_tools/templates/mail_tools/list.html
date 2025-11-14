@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mail templates</title>
+    <style>
+        body { font-family: "Segoe UI", Arial, sans-serif; background-color: #f4f6fb; margin: 0; padding: 32px; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12); }
+        h1 { margin-top: 0; color: #111827; }
+        ul { list-style: none; padding: 0; }
+        li { border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+        a { text-decoration: none; color: #2563eb; font-weight: 600; }
+        .badge { font-size: 12px; text-transform: uppercase; color: #6b7280; letter-spacing: 0.08em; }
+        .actions { display: flex; gap: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mail template previews</h1>
+        <p>Select a template to render it with its sample context. Use the broadcast page to send informational emails.</p>
+        <p><a href="{% url 'mail_tools:broadcast' %}">Go to broadcast composer</a></p>
+        <ul>
+            {% for preview in previews %}
+            <li>
+                <div>
+                    <div>{{ preview.label }}</div>
+                    <div class="badge">{{ preview.slug }}</div>
+                </div>
+                <div class="actions">
+                    <a href="{% url 'mail_tools:detail' preview.slug %}">Preview</a>
+                </div>
+            </li>
+            {% empty %}
+            <li>No templates registered.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

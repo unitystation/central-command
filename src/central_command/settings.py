@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "persistence",
     "baby_serverlist",
     "drf_spectacular",
+    "mail_tools",
 ]
 
 # What user model to use for authentication?
