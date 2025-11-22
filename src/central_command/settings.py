@@ -40,6 +40,7 @@ ALLOWED_HOSTS = ["*"] if DEBUG else ["localhost", "127.0.0.1"]
 
 _csrf_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_origins.split(",") if origin.strip()]
+BABY_SERVER_STATUS_TTL_SECONDS = 20
 
 INSTALLED_APPS = [
     "django.contrib.admin",

@@ -3,8 +3,7 @@ from typing import Any
 
 from django.core.cache import cache
 
-BABY_SERVER_STATUS_TTL_SECONDS = 10
-BABY_SERVER_HEARTBEAT_TTL_SECONDS = 10
+from central_command.settings import BABY_SERVER_STATUS_TTL_SECONDS
 
 SERVER_STATUS_KEY_PREFIX = "baby_server_status:"
 SERVER_HEARTBEAT_KEY_PREFIX = "baby_server_heartbeat:"
@@ -42,7 +41,7 @@ def get_many_baby_server_statuses(server_ids: Iterable[str]) -> dict[str, dict[s
 
 def set_baby_server_heartbeat(server_id: str, timestamp: str) -> None:
     """Persist the last-reported timestamp for a server."""
-    cache.set(_heartbeat_key(server_id), timestamp, timeout=BABY_SERVER_HEARTBEAT_TTL_SECONDS)
+    cache.set(_heartbeat_key(server_id), timestamp, timeout=BABY_SERVER_STATUS_TTL_SECONDS)
 
 
 def get_baby_server_heartbeat(server_id: str) -> str | None:

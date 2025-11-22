@@ -6,10 +6,10 @@ from django.core import signing
 from django.db import models
 
 from accounts.models import Account
-from commons.cache import BABY_SERVER_HEARTBEAT_TTL_SECONDS, get_baby_server_heartbeat
+from central_command.settings import BABY_SERVER_STATUS_TTL_SECONDS
+from commons.cache import get_baby_server_heartbeat
 
 SERVERLIST_TOKEN_SALT = "baby_serverlist.serverlist_token"
-LIVE_HEARTBEAT_GRACE_SECONDS = 2
 
 
 class BabyServer(models.Model):
@@ -52,6 +52,4 @@ class BabyServer(models.Model):
         if heartbeat_time.tzinfo is None:
             heartbeat_time = heartbeat_time.replace(tzinfo=UTC)
 
-        # live if last heartbeat within the cache TTL plus a small grace buffer
-        ttl_with_grace = BABY_SERVER_HEARTBEAT_TTL_SECONDS + LIVE_HEARTBEAT_GRACE_SECONDS
-        return datetime.now(tz=UTC) - heartbeat_time <= timedelta(seconds=ttl_with_grace)
+        return datetime.now(tz=UTC) - heartbeat_time <= timedelta(seconds=BABY_SERVER_STATUS_TTL_SECONDS)
