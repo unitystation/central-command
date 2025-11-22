@@ -2,11 +2,13 @@ from unittest.mock import patch
 
 from django.test import SimpleTestCase
 
+from central_command.settings import BABY_SERVER_STATUS_TTL_SECONDS
 from commons import cache as cache_module
 
 
 class CommonsCacheTests(SimpleTestCase):
-    def test_set_baby_server_status_uses_ephemeral_timeout(self) -> None:
+    @staticmethod
+    def test_set_baby_server_status_uses_ephemeral_timeout() -> None:
         payload = {"ServerName": "test"}
         server_id = "server-123"
 
@@ -19,7 +21,8 @@ class CommonsCacheTests(SimpleTestCase):
             timeout=cache_module.BABY_SERVER_STATUS_TTL_SECONDS,
         )
 
-    def test_set_baby_server_heartbeat_uses_ephemeral_timeout(self) -> None:
+    @staticmethod
+    def test_set_baby_server_heartbeat_uses_ephemeral_timeout() -> None:
         timestamp = "2024-01-01T00:00:00+00:00"
         server_id = "server-456"
 
@@ -29,5 +32,5 @@ class CommonsCacheTests(SimpleTestCase):
         fake_cache.set.assert_called_once_with(
             f"{cache_module.SERVER_HEARTBEAT_KEY_PREFIX}{server_id}",
             timestamp,
-            timeout=cache_module.BABY_SERVER_HEARTBEAT_TTL_SECONDS,
+            timeout=BABY_SERVER_STATUS_TTL_SECONDS,
         )
