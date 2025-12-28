@@ -1,0 +1,18 @@
+meta {
+  name: check token
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://127.0.0.1:8000/accounts/check-SHA512-for-account/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "sha512_token" : "AA",
+    "unique_identifier" : "bob"
+  }
+}

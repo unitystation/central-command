@@ -1,12 +1,14 @@
 import logging
 import secrets
 
+from datetime import timedelta
 from urllib.parse import urljoin
 from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
@@ -20,7 +22,7 @@ from rest_framework.views import APIView
 from commons.error_response import ErrorResponse
 from commons.mail_wrapper import send_email_with_template
 
-from ..models import Account, AccountConfirmation, PasswordResetRequestModel
+from ..models import Account, AccountConfirmation, PasswordResetRequestModel, SHA512Token
 from .serializers import (
     ConfirmAccountSerializer,
     EmailSerializer,
@@ -28,6 +30,8 @@ from .serializers import (
     PublicAccountDataSerializer,
     RegisterAccountSerializer,
     ResetPasswordSerializer,
+    SHA512IdentifierInputSerializer,
+    SHA512InputSerializer,
     UpdateAccountSerializer,
     VerifyAccountSerializer,
 )
@@ -369,3 +373,65 @@ class ResendAccountConfirmationView(GenericAPIView):
             return Response(status=status.HTTP_200_OK)
         else:
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+
+class RegisterSHA512ForAccount(APIView):
+    def post(self, request, *args, **kwargs):
+        user: Account = request.user
+
+        if not user.is_confirmed:
+            return ErrorResponse(
+                "You must confirm your email before performing this action.",
+                status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = SHA512InputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+        SHA512Token.objects.create(account=user, token=serializer.validated_data["sha512_token"])
+
+        return Response(
+            {"detail": "SHA512 token registered successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+
+class CheckSHA512ForAccountView(APIView):
+    """
+    Given an account unique_identifier and a SHA512 token,
+    checks if the token is associated with that account.
+    Deletes the token after checking.
+    **Public endpoint**
+    """
+
+    permission_classes = (AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = SHA512IdentifierInputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+        unique_id = serializer.validated_data["unique_identifier"]
+        token = serializer.validated_data["sha512_token"]
+
+        try:
+            account = Account.objects.get(unique_identifier=unique_id)
+        except Account.DoesNotExist:
+            return Response({"exists": False}, status=status.HTTP_200_OK)
+
+        valid_cutoff = timezone.now() - timedelta(minutes=3)
+        matching_token = SHA512Token.objects.filter(
+            account=account,
+            token=token,
+            created_at__gte=valid_cutoff,
+        ).first()
+
+        if matching_token:
+            matching_token.delete()
+            return Response(
+                {"exists": True, "account": PublicAccountDataSerializer(account, context={"request": request}).data},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response({"exists": False}, status=status.HTTP_200_OK)
