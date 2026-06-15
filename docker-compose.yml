@@ -8,7 +8,13 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
 
+  cache:
+    image: memcached:latest
+
   web:
+    depends_on:
+      - db
+      - cache
     image: unitystation/central-command:latest
     environment:
       - DEBUG=0

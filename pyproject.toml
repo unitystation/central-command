@@ -4,15 +4,16 @@ version = "0.1.0"
 requires-python = "==3.12.*"
 
 dependencies = [
-    "Django~=3.2.24",
-    "django-post-office~=3.8.0",
-    "djangorestframework~=3.14.0",
-    "django-rest-knox~=4.2.0",
-    "drf-spectacular~=0.27.1",
-    "gunicorn~=20.1.0",
-    "psycopg2-binary~=2.9.9",
-    "python-dotenv~=0.19.2",
-    "whitenoise~=6.6.0",
+    "Django~=5.2.0",
+    "django-post-office~=3.10.0",
+    "djangorestframework~=3.16.0",
+    "django-rest-knox~=5.0.0",
+    "drf-spectacular~=0.29.0",
+    "gunicorn~=23.0.0",
+    "psycopg2-binary~=2.9.10",
+    "python-dotenv~=1.0",
+    "whitenoise~=6.11.0",
+    "pymemcache>=4.0,<5.0",
 ]
 
 [build-system]
@@ -24,13 +25,12 @@ packages = ["src/central_command"]
 
 [tool.uv]
 dev-dependencies = [
-    "pre-commit~=4.0",
-    "ruff~=0.7",
-    "mypy>=1.7.1",
-    # TODO: bump django and stubs. these stubs seem to be incompatible with django 3.2
-    # https://github.com/typeddjango/django-stubs/tree/master?tab=readme-ov-file#version-compatibility
-    "django-stubs[compatible-mypy]==4.2.7",
-    "djangorestframework-stubs[compatible-mypy]==3.14.5",
+    "aiosmtpd~=1.4.5",
+    "pre-commit~=4.4",
+    "ruff~=0.14.0",
+    "mypy>=1.18.0",
+    "django-stubs[compatible-mypy]==5.2.7",
+    "djangorestframework-stubs[compatible-mypy]==3.16.5",
 ]
 
 [tool.ruff]

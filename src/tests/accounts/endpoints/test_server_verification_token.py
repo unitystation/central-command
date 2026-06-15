@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -7,6 +8,7 @@ from accounts.models import Account
 
 class ServerVerificationTokenTest(APITestCase):
     def setUp(self):
+        cache.clear()
         self.valid_account = Account.objects.create_user(
             username="validUser",
             email="validUser@valid.com",
@@ -57,6 +59,8 @@ class ServerVerificationTokenTest(APITestCase):
     def test_verify_with_invalid_identifier(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token}")
         response = self.client.get(self.url_request, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("verification_token", response.data)
 
         data = {"verification_token": response.data["verification_token"], "unique_identifier": "invalidIdentifier"}
         response = self.client.post(self.url_verify, data, format="json")

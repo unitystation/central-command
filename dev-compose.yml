@@ -10,9 +10,15 @@ services:
     ports:
       - "5432:5432"
 
+  cache:
+    image: memcached:latest
+    ports:
+      - "11211:11211"
+
   web:
     depends_on:
-    - db
+      - db
+      - cache
     build: .
     env_file: ./.env
     ports:

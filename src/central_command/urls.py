@@ -25,4 +25,6 @@ urlpatterns = [
     # API REST FRAMEWORK
     path("accounts/", include("accounts.api.urls", "Accounts API")),
     path("persistence/", include("persistence.api.urls")),
+    path("baby-serverlist/", include("baby_serverlist.api.urls")),
+    path("mail-tools/", include("mail_tools.urls")),
 ]

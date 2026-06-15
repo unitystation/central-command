@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Broadcast email</title>
+    <style>
+        :root {
+            color-scheme: light;
+        }
+        body { font-family: "Segoe UI", Arial, sans-serif; background-color: #f4f6fb; margin: 0; padding: 32px; }
+        .container { max-width: 820px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12); }
+        h1 { margin-top: 0; color: #111827; }
+        .field { margin-bottom: 22px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; color: #111827; }
+        input[type="text"], select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5f5; border-radius: 8px; font-size: 14px; }
+        select[multiple] { min-height: 220px; }
+        .errorlist { margin: 4px 0 0; padding: 0; list-style: none; color: #b91c1c; font-size: 13px; }
+        button[type="submit"] { background-color: #2563eb; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        a { color: #2563eb; text-decoration: none; }
+        .editor-toolbar { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        .editor-toolbar button { background: #e0e7ff; border: 1px solid #c7d2fe; color: #1e1b4b; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+        .editor-toolbar button:hover { background: #c7d2fe; }
+        .rich-editor { border: 1px solid #cbd5f5; border-radius: 10px; padding: 12px; min-height: 200px; line-height: 1.5; font-size: 15px; background: #f8fafc; }
+        .rich-editor:focus { outline: 2px solid #6366f1; background: #fff; }
+        .rich-editor:empty:before { content: attr(data-placeholder); color: #94a3b8; }
+        .search-input { width: 100%; padding: 8px 10px; border: 1px solid #cbd5f5; border-radius: 6px; margin-bottom: 10px; font-size: 14px; }
+        small { color: #6b7280; display: block; margin-top: 4px; }
+        form .actions { margin-top: 28px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Broadcast email</h1>
+        <p>Pick a template and send it to selected accounts. Only templates explicitly allowed for broadcasting will appear here.</p>
+        <p><a href="{% url 'mail_tools:list' %}">&larr; Back to templates</a></p>
+
+        <form method="post" id="broadcast-form">
+            {% csrf_token %}
+            <div class="field">
+                {{ form.template_slug.label_tag }}
+                {{ form.template_slug }}
+                {{ form.template_slug.errors }}
+            </div>
+
+            <div class="field">
+                {{ form.subject.label_tag }}
+                {{ form.subject }}
+                {{ form.subject.errors }}
+            </div>
+
+            <div class="field" id="editor-field">
+                <label for="rich-editor">Message body</label>
+                <noscript><small>Rich text editing requires JavaScript. Please enable it to compose a message.</small></noscript>
+                <div class="editor-toolbar" aria-label="Formatting toolbar">
+                    <button type="button" data-command="bold"><strong>B</strong></button>
+                    <button type="button" data-command="italic"><em>I</em></button>
+                    <button type="button" data-command="insertUnorderedList">• List</button>
+                    <button type="button" data-command="createLink">Link</button>
+                    <button type="button" data-command="removeFormat">Clear</button>
+                </div>
+                <div id="rich-editor" class="rich-editor" contenteditable="true" data-placeholder="Compose your optional message..."></div>
+                {{ form.body_html }}
+                {% if form.body_html.help_text %}
+                <small>{{ form.body_html.help_text }}</small>
+                {% endif %}
+                {{ form.body_html.errors }}
+            </div>
+
+            <div class="field">
+                <label for="recipient-filter">Recipients</label>
+                <input type="search" id="recipient-filter" class="search-input" placeholder="Filter recipients by email or username…" autocomplete="off">
+                {{ form.recipients }}
+                <small>Hold Ctrl/Cmd to select multiple recipients.</small>
+                {{ form.recipients.errors }}
+            </div>
+
+            {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="actions">
+                <button type="submit">Send emails</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        (function () {
+            const form = document.getElementById("broadcast-form");
+            const editor = document.getElementById("rich-editor");
+            const hiddenInput = document.getElementById("id_body_html");
+
+            const initial = hiddenInput.value || "";
+            if (initial) {
+                editor.innerHTML = initial;
+            }
+
+            const syncHidden = () => {
+                hiddenInput.value = editor.innerHTML.trim();
+            };
+
+            editor.addEventListener("input", syncHidden);
+            form.addEventListener("submit", syncHidden);
+
+            document.querySelector(".editor-toolbar").addEventListener("click", (event) => {
+                const button = event.target.closest("button[data-command]");
+                if (!button) {
+                    return;
+                }
+                event.preventDefault();
+                const command = button.dataset.command;
+                if (command === "createLink") {
+                    const url = prompt("Enter the URL");
+                    if (url) {
+                        document.execCommand("createLink", false, url);
+                    }
+                } else {
+                    document.execCommand(command, false, null);
+                }
+                editor.focus();
+                syncHidden();
+            });
+
+            const filterInput = document.getElementById("recipient-filter");
+            const recipientSelect = document.getElementById("id_recipients");
+
+            filterInput.addEventListener("input", () => {
+                const term = filterInput.value.trim().toLowerCase();
+                Array.from(recipientSelect.options).forEach((option) => {
+                    const text = option.text.toLowerCase();
+                    const value = option.value.toLowerCase();
+                    option.hidden = term && !text.includes(term) && !value.includes(term);
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

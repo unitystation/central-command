@@ -38,6 +38,10 @@ DEBUG = bool(os.environ.get("DJANGO_DEBUG", default="1"))
 
 ALLOWED_HOSTS = ["*"] if DEBUG else ["localhost", "127.0.0.1"]
 
+_csrf_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_origins.split(",") if origin.strip()]
+BABY_SERVER_STATUS_TTL_SECONDS = 20
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -51,7 +55,9 @@ INSTALLED_APPS = [
     "post_office",
     "accounts",
     "persistence",
+    "baby_serverlist",
     "drf_spectacular",
+    "mail_tools",
 ]
 
 # What user model to use for authentication?
@@ -154,6 +160,28 @@ DATABASES = {
     }
 }
 
+MEMCACHED_HOST = os.environ.get("MEMCACHED_HOST", "cache")
+MEMCACHED_PORT = os.environ.get("MEMCACHED_PORT", "11211")
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
+        "LOCATION": f"{MEMCACHED_HOST}:{MEMCACHED_PORT}",
+    }
+}
+
+
+if "test" in sys.argv:
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
+    }
+
+    CACHES["default"] = {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "tests",
+    }
+
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": ["knox.auth.TokenAuthentication"],
@@ -161,6 +189,14 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     "EXCEPTION_HANDLER": "commons.error_response.custom_exception_handler",
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "60/minute",
+        "user": "120/minute",
+    },
 }
 
 SPECTACULAR_SETTINGS = {
