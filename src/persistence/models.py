@@ -9,8 +9,7 @@ class Character(models.Model):
 
     fork_compatibility = models.CharField(
         max_length=25,
-        help_text='What fork is this character compatible with? This is a simple string, like "Unitystation" or '
-        '"tg".',
+        help_text='What fork is this character compatible with? This is a simple string, like "Unitystation" or "tg".',
         default="Unitystation",
     )
 

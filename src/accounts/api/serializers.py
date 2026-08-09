@@ -98,3 +98,10 @@ class ConfirmAccountSerializer(serializers.Serializer):
 
 class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
+class ConnectionChallengeSerializer(serializers.Serializer):
+    connection_challenge = serializers.CharField(min_length=128, max_length=128)
+
+class AuthRequestSerializer(ConnectionChallengeSerializer):
+    #previously used to be allow_blank but blank seems to get interpreted as not being present, which causes 
+    fork_compatibility = serializers.CharField(max_length=64)

@@ -1,12 +1,15 @@
 import logging
 import secrets
 
+from datetime import timedelta
 from urllib.parse import urljoin
 from uuid import uuid4
 
 from django.conf import settings
+from django.core import signing
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
@@ -20,8 +23,10 @@ from rest_framework.views import APIView
 from commons.error_response import ErrorResponse
 from commons.mail_wrapper import send_email_with_template
 
-from ..models import Account, AccountConfirmation, PasswordResetRequestModel
+from ..models import Account, AccountConfirmation, PasswordResetRequestModel, ConnectionChallenge
 from .serializers import (
+    AuthRequestSerializer,
+    ConnectionChallengeSerializer,
     ConfirmAccountSerializer,
     EmailSerializer,
     LoginWithCredentialsSerializer,
@@ -344,7 +349,7 @@ class ResendAccountConfirmationView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = EmailSerializer
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         serializer: EmailSerializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
@@ -369,3 +374,90 @@ class ResendAccountConfirmationView(GenericAPIView):
             return Response(status=status.HTTP_200_OK)
         else:
             return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+
+class AuthRequestView(APIView):
+    """
+    Given a connection challenge and fork compatibility, registers a connection challenge
+    for the authenticated user and returns a signed scope token.
+
+    **Requires Token authentication**
+    """
+
+    serializerClass = AuthRequestSerializer
+
+    def post(self, request):
+        user: Account = request.user
+
+        if not user.is_confirmed:
+            return ErrorResponse(
+                "You must confirm your email before performing this action.",
+                status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer: AuthRequestSerializer = self.serializerClass(data=request.data)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+        if ConnectionChallenge.objects.filter(connection_challenge=serializer.validated_data["connection_challenge"]).count() > 0:
+            return ErrorResponse(
+                "Connection challenge reuse is prohibited.",
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        ConnectionChallenge.objects.create(
+            account=user,
+            connection_challenge=serializer.validated_data["connection_challenge"],
+        )
+
+        scope_token_data = {
+            "unique_identifier": user.unique_identifier,
+            "fork_compatibility": serializer.validated_data["fork_compatibility"],
+        }
+
+        signer = signing.TimestampSigner()
+        scope_token = signer.sign_object(scope_token_data)  # Signs + serializes with timestamp
+
+        return Response(
+            {"scopeToken": scope_token},
+            status=status.HTTP_200_OK,
+        )
+
+
+class RedeemSessionView(APIView):
+    """
+    Given an account unique_identifier and a connection challenge,
+    checks if the token is associated with that account, returning it if so.
+    Deletes the token after checking.
+
+    **Public endpoint**
+    """
+
+    permission_classes = (AllowAny,)
+    serializerClass = ConnectionChallengeSerializer
+
+    def post(self, request):
+        serializer: ConnectionChallengeSerializer = self.serializerClass(data=request.data)
+        if not serializer.is_valid():
+            return ErrorResponse(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+        connection_challenge = serializer.validated_data["connection_challenge"]
+
+        challenge_object = ConnectionChallenge.objects.filter(connection_challenge=connection_challenge).first()
+
+        if challenge_object:
+            valid_cutoff = timezone.now() - timedelta(minutes=3)
+
+            if challenge_object.created_at < valid_cutoff:
+                # Token is older than 3 minutes, delete it
+                challenge_object.delete()
+                return ErrorResponse("Token is expired.", status.HTTP_401_UNAUTHORIZED)
+
+            challenge_object.delete()
+
+            return Response(
+                {"account": PublicAccountDataSerializer(challenge_object.account, context={"request": request}).data},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response("Token is invalid.", status=status.HTTP_401_UNAUTHORIZED)

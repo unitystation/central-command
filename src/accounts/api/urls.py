@@ -2,10 +2,12 @@ from django.urls import path
 from knox import views as knox_views
 
 from .views import (
+    RedeemSessionView,
     ConfirmAccountView,
     LoginWithCredentialsView,
     LoginWithTokenView,
     RegisterAccountView,
+    AuthRequestView,
     RequestPasswordResetView,
     RequestVerificationTokenView,
     ResendAccountConfirmationView,
@@ -45,4 +47,6 @@ urlpatterns = [
         name="reset-password-token",
     ),
     path("reset-password/", RequestPasswordResetView.as_view(), name="reset-password"),
+    path("auth-request/", AuthRequestView.as_view(), name="auth-request"),
+    path("redeem-session/", RedeemSessionView.as_view(), name="redeem-session"),
 ]
