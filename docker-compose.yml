@@ -17,7 +17,7 @@ services:
       - cache
     image: unitystation/central-command:latest
     environment:
-      - DEBUG=0
+      - DJANGO_DEBUG=0
     env_file: ./.env
     expose:
       - 8000

@@ -20,6 +20,8 @@ services:
       - db
       - cache
     build: .
+    environment:
+      - DJANGO_DEBUG=1
     env_file: ./.env
     ports:
       - "8000:8000"
