@@ -39,8 +39,7 @@ class Account(AbstractUser):
         unique=False,
         validators=[MinLengthValidator(3), UnicodeUsernameValidator()],
         help_text=(
-            "Public username is used to identify your account publicly and shows in "
-            "OOC. This can be changed at any time"
+            "Public username is used to identify your account publicly and shows in OOC. This can be changed at any time"
         ),
     )
 

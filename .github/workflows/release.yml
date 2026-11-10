@@ -10,11 +10,11 @@ jobs:
     docker:
         runs-on: ubuntu-latest
         steps:
-            -   uses: actions/checkout@v4
+            -   uses: actions/checkout@v7
 
             -   name: Extract Tag Name
                 id: extract_tag
-                run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+                run: echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
 
             -   name: Build docker image with tag
                 run: |
