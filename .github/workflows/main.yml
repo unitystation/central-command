@@ -14,16 +14,16 @@ jobs:
     lint:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
-            - uses: astral-sh/setup-uv@v3
+            - uses: actions/checkout@v7
+            - uses: astral-sh/setup-uv@v10.3.3
               with:
-                version: "0.4.24"
+                version: "0.13.7"
                 enable-cache: true
 
             - name: pre-commit cache key
               run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
 
-            - uses: actions/cache@v4
+            - uses: actions/cache@v6
               with:
                   path: ~/.cache/pre-commit
                   key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
@@ -45,10 +45,10 @@ jobs:
         needs: [ lint ]
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
-            - uses: astral-sh/setup-uv@v3
+            - uses: actions/checkout@v7
+            - uses: astral-sh/setup-uv@v10.3.3
               with:
-                version: "0.4.24"
+                version: "0.13.7"
                 enable-cache: true
 
             - name: Set up Python
@@ -74,7 +74,7 @@ jobs:
         needs: [ lint, unit_test ]
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Build docker image
               run: |
                   docker pull $IMAGE_NAME

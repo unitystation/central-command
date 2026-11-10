@@ -1,4 +1,4 @@
-FROM python:3.12-alpine3.20
+FROM python:3.13-alpine3.24
 
 ENV PYTHONUNBUFFERED=yes \
     PYTHONDONTWRITEBYTECODE=yes \
@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=yes \
 
 WORKDIR /src
 
-RUN --mount=from=ghcr.io/astral-sh/uv:0.4.24,source=/uv,target=/bin/uv \
+RUN --mount=from=ghcr.io/astral-sh/uv:0.13.7,source=/uv,target=/bin/uv \
     --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \

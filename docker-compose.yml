@@ -2,7 +2,7 @@ version: "3"
 
 services:
   db:
-    image: postgres:14.1-alpine
+    image: postgres:14-alpine
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
@@ -17,7 +17,7 @@ services:
       - cache
     image: unitystation/central-command:latest
     environment:
-      - DEBUG=0
+      - DJANGO_DEBUG=0
     env_file: ./.env
     expose:
       - 8000

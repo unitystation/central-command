@@ -34,9 +34,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", "foo")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get("DJANGO_DEBUG", default="1"))
+DEBUG = os.environ.get("DJANGO_DEBUG", "0").strip().lower() in {"1", "true", "yes", "on"}
 
-ALLOWED_HOSTS = ["*"] if DEBUG else ["localhost", "127.0.0.1"]
+_allowed_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts.split(",") if host.strip()] or (
+    ["*"] if DEBUG else ["localhost", "127.0.0.1"]
+)
 
 _csrf_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_origins.split(",") if origin.strip()]
@@ -129,6 +132,12 @@ LOGGING = {
         "django.utils.autoreload": {
             "handlers": ["console"],
             "level": "WARNING",
+            "propagate": False,
+        },
+        # template variable lookup failures are logged at DEBUG with full tracebacks (very noisy)
+        "django.template": {
+            "handlers": ["console"],
+            "level": "INFO",
             "propagate": False,
         },
         "accounts": {

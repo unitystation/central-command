@@ -1,18 +1,18 @@
 [project]
 name = "central-command"
 version = "0.1.0"
-requires-python = "==3.12.*"
+requires-python = "==3.13.*"
 
 dependencies = [
     "Django~=5.2.0",
-    "django-post-office~=3.10.0",
-    "djangorestframework~=3.16.0",
-    "django-rest-knox~=5.0.0",
-    "drf-spectacular~=0.29.0",
+    "django-post-office~=3.12",
+    "djangorestframework~=3.18",
+    "django-rest-knox~=5.1",
+    "drf-spectacular~=0.30.0",
     "gunicorn~=23.0.0",
-    "psycopg2-binary~=2.9.10",
+    "psycopg2-binary~=2.9.13",
     "python-dotenv~=1.0",
-    "whitenoise~=6.11.0",
+    "whitenoise~=6.12",
     "pymemcache>=4.0,<5.0",
 ]
 
@@ -23,14 +23,14 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/central_command"]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "aiosmtpd~=1.4.5",
-    "pre-commit~=4.4",
-    "ruff~=0.14.0",
-    "mypy>=1.18.0",
-    "django-stubs[compatible-mypy]==5.2.7",
-    "djangorestframework-stubs[compatible-mypy]==3.16.5",
+    "pre-commit~=4.7",
+    "ruff~=0.17.0",
+    "mypy>=1.18.0,<2",
+    "django-stubs[compatible-mypy]~=5.2.7",
+    "djangorestframework-stubs[compatible-mypy]>=3.16.5",
 ]
 
 [tool.ruff]
@@ -42,6 +42,8 @@ ignore = [
     # doesn't like Optional
     # https://github.com/charliermarsh/ruff/issues/4858
     "UP007",
+    # same as UP007, split into its own code in newer ruff
+    "UP045",
     # explicit raise from might be a bit too verbose, disable for now
     "B904",
     # asserts are useful in both tests and type checker persuasion
