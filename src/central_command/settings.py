@@ -222,6 +222,7 @@ Features
     """,
     "VERSION": None,
     "SERVE_INCLUDE_SCHEMA": False,
+    "REDOC_DIST": "https://cdn.jsdelivr.net/npm/redoc@2.5.4",
 }
 
 # Token expiration
